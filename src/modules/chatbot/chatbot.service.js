@@ -1519,7 +1519,7 @@ Strict rules:
 - If the detected language is Khmer, explain naturally in Khmer while preserving technical names such as Arduino Uno, ESP32, HC-SR04, TCRT5000, L298N, TB6612FNG, DRV8833, SG90, Raspberry Pi, and DHT11 in English.
 - Explain in beginner-friendly language.
 - Answer in ${responseLanguage}.
-- Keep the answer concise and directly answer the user's question.`;
+- Directly answer the user's question with enough detail to be genuinely useful — don't sacrifice clarity or completeness for brevity.`;
 }
 
 function buildEducationalModelPrompt({ message, educationIntent, projectTypes = [], catalogContext = [], language = "en" }) {
@@ -1561,7 +1561,7 @@ Rules:
 - For how-to questions, include required parts, wiring overview, basic logic/algorithm, and testing tips.
 - For troubleshooting, include likely causes, checks, and safe fixes.
 - Add a beginner-friendly safety/wiring note when motors, batteries, or power are involved.
-- Keep the answer concise with short sections or bullets.
+- Use short sections or bullets so it's easy to scan, but include enough detail (wiring steps, values, reasoning) to be genuinely useful — don't sacrifice completeness for brevity.
 - Answer in ${responseLanguage}.`;
 }
 
