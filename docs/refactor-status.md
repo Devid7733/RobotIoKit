@@ -203,6 +203,8 @@ Rules:
 * Removed `generateStaticParams()` from `src/app/products/[slug]/page.js` and `src/app/robot-kits/[slug]/page.js`.
 * Added `export const dynamic = "force-dynamic"` to both pages so product/kit data is fetched from Neon at request time instead of build time.
 * Build no longer queries Prisma during static generation; `notFound()` still handles missing slugs.
+* Added `export const dynamic = "force-dynamic"` to `src/app/not-found.jsx` so `/_not-found` is not statically prerendered at build time (prevented `prisma.category.findMany` from running during build via `StorefrontShell`).
+* Added try/catch around the category fetch in `src/components/storefront/StorefrontShell.jsx` so any DB failure degrades gracefully to an empty category list instead of crashing.
 
 ### Admin Notifications
 

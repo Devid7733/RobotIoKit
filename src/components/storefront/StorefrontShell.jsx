@@ -4,8 +4,13 @@ import Navbar from "@/components/layout/Navbar";
 import { listStorefrontCategories, toStorefrontCategory } from "@/services/productService";
 
 export default async function StorefrontShell({ children }) {
-  const rawCategories = await listStorefrontCategories();
-  const categories = rawCategories.map(toStorefrontCategory);
+  let categories = [];
+  try {
+    const rawCategories = await listStorefrontCategories();
+    categories = rawCategories.map(toStorefrontCategory);
+  } catch {
+    // categories stays [] — navbar renders without dropdown items
+  }
 
   return (
     <div className="page-shell">
