@@ -206,6 +206,7 @@ Rules:
 * Added `export const dynamic = "force-dynamic"` to `src/app/not-found.jsx` so `/_not-found` is not statically prerendered at build time (prevented `prisma.category.findMany` from running during build via `StorefrontShell`).
 * Added try/catch around the category fetch in `src/components/storefront/StorefrontShell.jsx` so any DB failure degrades gracefully to an empty category list instead of crashing.
 * Added `export const dynamic = "force-dynamic"` and try/catch to `src/app/sitemap.js` — sitemap was calling `prisma.product.findMany` and `prisma.robotKit.findMany` during static build; now generates at request time when Neon is reachable.
+* Restored `src/app/page.jsx` (home page) — commit `13071a4` accidentally emptied the file entirely instead of adding `force-dynamic`, causing a white page / React "Element type is invalid" 500 on all requests to `/`. File restored from git history (`65ec8ff`) with `export const dynamic = "force-dynamic"` added.
 
 ### Admin Notifications
 
