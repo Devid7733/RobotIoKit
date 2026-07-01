@@ -1,13 +1,21 @@
 import { listProductSlugs } from "@/services/productService";
 import { listStorefrontRobotKits } from "@/services/robotKitService";
 
+export const dynamic = "force-dynamic";
+
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://robotiokit.com";
 
 export default async function sitemap() {
-  const [productSlugs, kits] = await Promise.all([
-    listProductSlugs(),
-    listStorefrontRobotKits()
-  ]);
+  let productSlugs = [];
+  let kits = [];
+  try {
+    [productSlugs, kits] = await Promise.all([
+      listProductSlugs(),
+      listStorefrontRobotKits()
+    ]);
+  } catch {
+    // If DB is unavailable, sitemap returns only static pages
+  }
 
   const staticPages = ["/", "/products", "/robot-kits", "/search"].map((path) => ({
     url: `${BASE_URL}${path}`,
