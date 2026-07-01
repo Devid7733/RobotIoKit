@@ -1,0 +1,280 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PREPARING
+  SHIPPED
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PENDING_VERIFICATION
+  PAID
+  FAILED
+  EXPIRED
+}
+
+enum PaymentMethod {
+  KHQR
+  CASH_ON_DELIVERY
+}
+
+model User {
+  id                            String                  @id @default(cuid())
+  name                          String?
+  email                         String                  @unique
+  emailVerified                 DateTime?
+  emailVerificationOtpHash      String?
+  emailVerificationOtpExpiresAt DateTime?
+  emailVerificationSentAt       DateTime?
+  password                      String?
+  phone                         String?
+  province                      String?
+  city                          String?
+  address                       String?
+  image                         String?
+  avatarUrl                     String?
+  role                          UserRole                @default(CUSTOMER)
+  carts                         Cart[]
+  orders                        Order[]
+  adminNotificationReads        AdminNotificationRead[]
+  accounts                      Account[]
+  sessions                      Session[]
+  createdAt                     DateTime                @default(now())
+  updatedAt                     DateTime                @updatedAt
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id             String      @id @default(cuid())
+  name           String
+  slug           String      @unique
+  description    String
+  sku            String?     @unique
+  price          Float
+  stock          Int         @default(0)
+  imageUrl       String?
+  voltage        String?
+  voltages       String[]    @default([])
+  badge          String?
+  overview       String?
+  features       Json?
+  compatibility  Json?
+  specifications Json?
+  featured       Boolean     @default(false)
+  categoryId     String
+  category       Category    @relation(fields: [categoryId], references: [id])
+  cartItems      CartItem[]
+  orderItems     OrderItem[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model RobotKit {
+  id            String      @id @default(cuid())
+  name          String
+  slug          String      @unique
+  description   String
+  sku           String?     @unique
+  price         Float
+  level         String
+  stockQuantity Int         @default(0)
+  image         String?
+  featured      Boolean     @default(false)
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  sessionId String     @unique
+  userId    String?    @unique
+  user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id         String    @id @default(cuid())
+  quantity   Int
+  cartId     String
+  productId  String?
+  robotKitId String?
+  cart       Cart      @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product    Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  robotKit   RobotKit? @relation(fields: [robotKitId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([cartId])
+}
+
+model Order {
+  id                  String          @id @default(cuid())
+  orderNumber         String          @unique
+  status              OrderStatus     @default(PENDING)
+  subtotal            Float
+  deliveryFee         Float
+  total               Float
+  customerName        String?
+  customerPhone       String?
+  province            String?
+  city                String?
+  address             String?
+  note                String?
+  paymentMethod       PaymentMethod   @default(KHQR)
+  checkoutKey         String?         @unique
+  inventoryReservedAt DateTime?
+  inventoryReleasedAt DateTime?
+  userId              String
+  user                User            @relation(fields: [userId], references: [id])
+  items               OrderItem[]
+  payment             Payment?
+  timeline            OrderTimeline[]
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+}
+
+model OrderItem {
+  id         String    @id @default(cuid())
+  quantity   Int
+  price      Float
+  orderId    String
+  productId  String?
+  robotKitId String?
+  order      Order     @relation(fields: [orderId], references: [id])
+  product    Product?  @relation(fields: [productId], references: [id])
+  robotKit   RobotKit? @relation(fields: [robotKitId], references: [id])
+}
+
+model Payment {
+  id               String        @id @default(cuid())
+  method           PaymentMethod @default(KHQR)
+  status           PaymentStatus @default(UNPAID)
+  reference        String?
+  qrPayload        String?
+  proofImage       String?
+  paymentExpiresAt DateTime?
+  orderId          String        @unique
+  order            Order         @relation(fields: [orderId], references: [id])
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model OrderTimeline {
+  id        String   @id @default(cuid())
+  orderId   String
+  type      String
+  message   String
+  actorName String?
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([orderId, createdAt])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  email     String
+  otpHash   String
+  expiresAt DateTime
+  usedAt    DateTime?
+  attempts  Int       @default(0)
+  createdAt DateTime  @default(now())
+
+  @@index([email, createdAt])
+}
+
+model AdminNotificationRead {
+  id             String   @id @default(cuid())
+  userId         String
+  notificationId String?
+  lastReadAt     DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([userId, notificationId])
+  @@index([userId, notificationId])
+}
+
+model AdminSettings {
+  id           String   @id @default("default")
+  storeName    String?
+  supportEmail String?
+  phoneNumber  String?
+  address      String?
+  logoUrl      String?
+  smtpHost     String?
+  smtpPort     Int?
+  senderEmail  String?
+  merchantName String?
+  bakongId     String?
+  accountName  String?
+  currency     String?
+  khqrImageUrl String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

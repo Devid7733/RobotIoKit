@@ -1,0 +1,205 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-slate-50 font-sans text-slate-900 antialiased;
+}
+
+a {
+  @apply transition-colors;
+}
+
+/* Thin scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.page-shell {
+  @apply min-h-screen bg-slate-50;
+}
+
+.storefront-container {
+  @apply mx-auto w-full max-w-7xl px-6;
+}
+
+.section-card {
+  @apply rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_20px_45px_rgba(15,23,42,0.06)];
+}
+
+.surface-card {
+  @apply rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_20px_45px_rgba(15,23,42,0.06)];
+}
+
+.surface-card-sm {
+  @apply rounded-[24px] border border-slate-200/80 bg-white p-5 shadow-[0_16px_32px_rgba(15,23,42,0.05)];
+}
+
+.surface-card-muted {
+  @apply rounded-[24px] border border-slate-200 bg-slate-50/90 p-5;
+}
+
+.surface-card-dark {
+  @apply rounded-3xl border border-brand-blue/10 bg-brand-blue p-6 text-white shadow-[0_22px_48px_rgba(37,99,235,0.2)];
+}
+
+.surface-outline {
+  @apply rounded-[24px] border border-slate-200 p-4;
+}
+
+.section-shell {
+  @apply py-16;
+}
+
+.page-section {
+  @apply py-10 sm:py-12;
+}
+
+.page-hero {
+  @apply section-card mb-8 sm:mb-10;
+}
+
+.page-kicker {
+  @apply eyebrow-text;
+}
+
+.page-title {
+  @apply mt-3 font-display text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl;
+}
+
+.page-description {
+  @apply mt-3 max-w-3xl text-sm leading-7 text-slate-500 sm:text-base sm:leading-8;
+}
+
+.heading-display {
+  @apply font-display text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl;
+}
+
+.heading-section {
+  @apply font-display text-3xl font-semibold tracking-tight text-slate-900;
+}
+
+.eyebrow-text {
+  @apply text-xs font-semibold uppercase tracking-[0.22em] text-brand-blue;
+}
+
+.input-base {
+  @apply w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-brand-blue focus:bg-white focus:ring-4 focus:ring-brand-blue/10;
+}
+
+.button-primary {
+  @apply inline-flex items-center justify-center rounded-2xl bg-brand-orange px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(249,115,22,0.22)] transition hover:-translate-y-0.5 hover:bg-[#f26b09] hover:shadow-[0_18px_34px_rgba(249,115,22,0.28)];
+}
+
+.button-secondary {
+  @apply inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50;
+}
+
+.button-blue {
+  @apply inline-flex items-center justify-center rounded-2xl bg-brand-blue px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(37,99,235,0.2)] transition hover:-translate-y-0.5 hover:bg-[#163fe0] hover:shadow-[0_18px_34px_rgba(37,99,235,0.26)];
+}
+
+.button-success {
+  @apply inline-flex items-center justify-center rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(16,185,129,0.2)] transition hover:-translate-y-0.5 hover:bg-emerald-600 hover:shadow-[0_18px_34px_rgba(16,185,129,0.26)];
+}
+
+.badge-pill {
+  @apply inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em];
+}
+
+.badge-soft {
+  @apply inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold;
+}
+
+.badge-blue {
+  @apply bg-brand-blue/10 text-brand-blue;
+}
+
+.badge-orange {
+  @apply bg-orange-100 text-brand-orange;
+}
+
+.badge-emerald {
+  @apply bg-emerald-100 text-emerald-700;
+}
+
+.badge-amber {
+  @apply bg-amber-100 text-amber-700;
+}
+
+.badge-rose {
+  @apply bg-rose-100 text-rose-700;
+}
+
+.badge-slate {
+  @apply bg-slate-100 text-slate-700;
+}
+
+.badge-level-beginner {
+  @apply bg-emerald-50 text-emerald-600;
+}
+
+.badge-level-intermediate {
+  @apply bg-amber-100 text-amber-700;
+}
+
+.badge-level-advanced {
+  @apply bg-rose-100 text-rose-700;
+}
+
+.admin-shell {
+  @apply min-h-screen bg-slate-100;
+}
+
+.admin-main {
+  @apply flex-1 p-5 sm:p-8;
+}
+
+.admin-page {
+  @apply space-y-6;
+}
+
+.admin-kicker {
+  @apply text-xs font-semibold uppercase tracking-[0.2em] text-brand-blue;
+}
+
+.admin-title {
+  @apply mt-2 font-display text-3xl font-semibold tracking-tight text-slate-900;
+}
+
+.admin-description {
+  @apply mt-2 text-sm leading-6 text-slate-500;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

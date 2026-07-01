@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+
+# Next.js and build output
+.next/
+out/
+dist/
+build/
+coverage/
+.vercel/
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Local AI/editor instructions
+AGENTS.md
+CLAUDE.md
+.codex/
+.cursor/
+.cursorrules
+
+# Runtime logs and temporary files
+*.log
+*.pid
+*.tmp
+tmp/
+temp/
+
+# User-generated uploads
+public/uploads/
+
+# Local databases
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Editors and operating systems
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+Desktop.ini

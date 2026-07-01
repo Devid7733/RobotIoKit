@@ -1,0 +1,3 @@
+ALTER TYPE "PaymentStatus" ADD VALUE IF NOT EXISTS 'EXPIRED';
+
+ALTER TABLE "Payment" ADD COLUMN "paymentExpiresAt" TIMESTAMP(3);
