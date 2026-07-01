@@ -7,9 +7,10 @@ import { AlsoBoughtSkeleton, RelatedProductsSkeleton } from "@/components/ui/ske
 import {
   getAlsoBoughtProducts,
   getCompatibleProducts,
-  getStorefrontProductBySlug,
-  listProductSlugs
+  getStorefrontProductBySlug
 } from "@/services/productService";
+
+export const dynamic = "force-dynamic";
 
 function buildGallery(product) {
   return [product.image, product.image, product.image, product.image];
@@ -103,11 +104,6 @@ async function CompatibleProducts({ productSlug }) {
       </div>
     </section>
   );
-}
-
-export async function generateStaticParams() {
-  const products = await listProductSlugs();
-  return products.map((product) => ({ slug: product.slug }));
 }
 
 export async function generateMetadata({ params }) {

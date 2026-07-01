@@ -2,7 +2,9 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import AddToCartButton from "@/components/storefront/AddToCartButton";
 import StorefrontShell from "@/components/storefront/StorefrontShell";
-import { getStorefrontRobotKitBySlug, listStorefrontRobotKits } from "@/services/robotKitService";
+import { getStorefrontRobotKitBySlug } from "@/services/robotKitService";
+
+export const dynamic = "force-dynamic";
 
 const levelBadgeClass = {
   Beginner: "bg-emerald-100 text-emerald-700",
@@ -34,11 +36,6 @@ function LevelDots({ level }) {
       ))}
     </div>
   );
-}
-
-export async function generateStaticParams() {
-  const kits = await listStorefrontRobotKits();
-  return kits.map((kit) => ({ slug: kit.slug }));
 }
 
 export async function generateMetadata({ params }) {

@@ -198,6 +198,12 @@ Rules:
 
 ## Known Issues
 
+### Vercel Build Fix (resolved 2026-07-01)
+
+* Removed `generateStaticParams()` from `src/app/products/[slug]/page.js` and `src/app/robot-kits/[slug]/page.js`.
+* Added `export const dynamic = "force-dynamic"` to both pages so product/kit data is fetched from Neon at request time instead of build time.
+* Build no longer queries Prisma during static generation; `notFound()` still handles missing slugs.
+
 ### Admin Notifications
 
 * Badge count works
