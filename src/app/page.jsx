@@ -34,7 +34,13 @@ const categoryAccent = [
 // ─── Async streaming sub-components ──────────────────────────────────────────
 
 async function HomeHeroStats() {
-  const heroStats = await getHeroStats();
+  let heroStats;
+  try {
+    heroStats = await getHeroStats();
+  } catch (error) {
+    console.warn("[home] HomeHeroStats failed, hiding section", error);
+    return null;
+  }
   return (
     <div className="mt-12 grid max-w-2xl grid-cols-2 gap-5 sm:grid-cols-4">
       {heroStats.map((item) => (
@@ -48,7 +54,13 @@ async function HomeHeroStats() {
 }
 
 async function HomeCategories() {
-  const categories = await listHomeCategories(6);
+  let categories;
+  try {
+    categories = await listHomeCategories(6);
+  } catch (error) {
+    console.warn("[home] HomeCategories failed, hiding section", error);
+    return null;
+  }
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
       {categories.map((category, index) => (
@@ -68,7 +80,13 @@ async function HomeCategories() {
 }
 
 async function HomeFeaturedKits() {
-  const kits = await getFeaturedRobotKits(3);
+  let kits;
+  try {
+    kits = await getFeaturedRobotKits(3);
+  } catch (error) {
+    console.warn("[home] HomeFeaturedKits failed, hiding section", error);
+    return null;
+  }
   return (
     <div className="grid gap-6 lg:grid-cols-3">
       {kits.map((kit) => (
@@ -79,7 +97,13 @@ async function HomeFeaturedKits() {
 }
 
 async function HomeNewArrivals() {
-  const products = await listNewArrivalsProducts(6);
+  let products;
+  try {
+    products = await listNewArrivalsProducts(6);
+  } catch (error) {
+    console.warn("[home] HomeNewArrivals failed, hiding section", error);
+    return null;
+  }
   if (!products.length) return null;
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -91,7 +115,13 @@ async function HomeNewArrivals() {
 }
 
 async function HomeFeaturedProducts() {
-  const products = await listFeaturedStorefrontProducts(8);
+  let products;
+  try {
+    products = await listFeaturedStorefrontProducts(8);
+  } catch (error) {
+    console.warn("[home] HomeFeaturedProducts failed, hiding section", error);
+    return null;
+  }
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       {products.map((product) => (

@@ -22,6 +22,7 @@ export async function GET() {
 
     return NextResponse.json({ ok: true, data: cart });
   } catch (error) {
+    console.error("[api/cart] GET failed", error);
     return NextResponse.json({ ok: false, message: errorMessage(error) }, { status: error?.status || 500 });
   }
 }
@@ -44,6 +45,7 @@ export async function POST(request) {
 
     return NextResponse.json({ ok: true, data: cart }, { status: 201 });
   } catch (error) {
+    console.error("[api/cart] POST failed", error);
     return NextResponse.json({ ok: false, message: errorMessage(error) }, { status: error?.status || 500 });
   }
 }
@@ -65,6 +67,7 @@ export async function PATCH(request) {
 
     return NextResponse.json({ ok: true, data: cart });
   } catch (error) {
+    console.error("[api/cart] PATCH failed", error);
     return NextResponse.json({ ok: false, message: errorMessage(error) }, { status: 500 });
   }
 }
@@ -89,6 +92,7 @@ export async function DELETE(request) {
 
     return NextResponse.json({ ok: true, data: cart });
   } catch (error) {
+    console.error("[api/cart] DELETE failed", error);
     return NextResponse.json({ ok: false, message: errorMessage(error) }, { status: 500 });
   }
 }
