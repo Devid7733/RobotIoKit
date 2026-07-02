@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import AddToCartButton from "@/components/storefront/AddToCartButton";
 import Icon from "@/components/common/Icon";
@@ -26,11 +27,15 @@ function ProductResultCard({ product }) {
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-[0_14px_34px_rgba(15,23,42,0.05)] transition hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(15,23,42,0.09)]">
       <div className="relative">
-        <Link
-          href={`/products/${product.slug}`}
-          className="block h-56 bg-slate-100 bg-cover bg-center"
-          style={{ backgroundImage: `url(${product.image})` }}
-        />
+        <Link href={`/products/${product.slug}`} className="relative block h-56 overflow-hidden bg-slate-100">
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+            className="object-cover"
+          />
+        </Link>
       </div>
       <div className="flex flex-1 flex-col p-4">
         <div className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-[11px] font-medium text-brand-blue">
@@ -72,10 +77,14 @@ function RobotKitResultCard({ kit }) {
 
   return (
     <article className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_16px_36px_rgba(15,23,42,0.06)]">
-      <div
-        className="relative h-64 bg-slate-100 bg-cover bg-center"
-        style={{ backgroundImage: `url(${kit.image})` }}
-      >
+      <div className="relative h-64 overflow-hidden bg-slate-100">
+        <Image
+          src={kit.image}
+          alt={kit.name}
+          fill
+          sizes="(max-width: 1024px) 100vw, 50vw"
+          className="object-cover"
+        />
         <span className="absolute right-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-700">
           {kit.level}
         </span>

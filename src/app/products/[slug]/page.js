@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import ProductPurchasePanel from "@/components/storefront/ProductPurchasePanel";
 import StorefrontShell from "@/components/storefront/StorefrontShell";
@@ -38,10 +39,9 @@ async function AlsoBoughtProducts({ productId }) {
             href={`/products/${product.slug}`}
             className="group flex items-center gap-3 rounded-[14px] border border-slate-200 bg-white p-3 shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-brand-blue/30 hover:shadow-[0_14px_30px_rgba(15,23,42,0.08)]"
           >
-            <div
-              className="h-16 w-16 shrink-0 rounded-xl bg-slate-100 bg-cover bg-center"
-              style={{ backgroundImage: `url(${product.image})` }}
-            />
+            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+              <Image src={product.image} alt={product.name} fill sizes="64px" className="object-cover" />
+            </div>
             <div className="min-w-0 flex-1">
               <div className="truncate text-[11px] font-medium text-brand-blue">{product.category}</div>
               <div className="mt-0.5 line-clamp-2 text-sm font-semibold leading-snug text-slate-900 transition-colors group-hover:text-brand-blue">
@@ -72,10 +72,15 @@ async function CompatibleProducts({ productSlug }) {
             href={`/products/${product.slug}`}
             className="group flex h-full flex-col overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-[0_14px_34px_rgba(15,23,42,0.05)] transition hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(15,23,42,0.09)]"
           >
-            <div
-              className="h-44 bg-slate-100 bg-cover bg-center transition duration-300 group-hover:scale-[1.02]"
-              style={{ backgroundImage: `url(${product.image})` }}
-            />
+            <div className="relative h-44 overflow-hidden bg-slate-100">
+              <Image
+                src={product.image}
+                alt={product.name}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                className="object-cover transition duration-300 group-hover:scale-[1.02]"
+              />
+            </div>
             <div className="flex flex-1 flex-col p-4">
               <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium">
                 <span className="rounded-full bg-blue-50 px-2.5 py-1 text-brand-blue">{product.category}</span>
@@ -155,17 +160,24 @@ export default async function ProductDetailPage({ params }) {
 
         <section className="grid gap-8 lg:grid-cols-[1fr,0.95fr]">
           <div>
-            <div
-              className="h-[22rem] rounded-[18px] border border-slate-200 bg-slate-50 bg-cover bg-center shadow-[0_14px_34px_rgba(15,23,42,0.05)] sm:h-[30rem]"
-              style={{ backgroundImage: `url(${product.image})` }}
-            />
+            <div className="relative h-[22rem] overflow-hidden rounded-[18px] border border-slate-200 bg-slate-50 shadow-[0_14px_34px_rgba(15,23,42,0.05)] sm:h-[30rem]">
+              <Image
+                src={product.image}
+                alt={product.name}
+                fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                priority
+                className="object-cover"
+              />
+            </div>
             <div className="mt-4 grid grid-cols-4 gap-3">
               {gallery.map((image, index) => (
                 <div
                   key={`${image}-${index}`}
-                  className="h-16 rounded-xl border border-slate-200 bg-cover bg-center shadow-[0_8px_20px_rgba(15,23,42,0.05)] sm:h-20"
-                  style={{ backgroundImage: `url(${image})` }}
-                />
+                  className="relative h-16 overflow-hidden rounded-xl border border-slate-200 shadow-[0_8px_20px_rgba(15,23,42,0.05)] sm:h-20"
+                >
+                  <Image src={image} alt={`${product.name} thumbnail ${index + 1}`} fill sizes="120px" className="object-cover" />
+                </div>
               ))}
             </div>
           </div>

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import AddToCartButton from "@/components/storefront/AddToCartButton";
 import PriceRangeFilter from "@/components/storefront/PriceRangeFilter";
@@ -193,10 +194,17 @@ export default async function RobotKitsPage({ searchParams }) {
                 <div className="relative">
                   <Link
                     href={`/robot-kits/${kit.slug}`}
-                    className="block h-80 cursor-pointer bg-slate-100 bg-cover bg-center transition duration-300 hover:scale-[1.01]"
-                    style={{ backgroundImage: `url(${kit.image})` }}
+                    className="relative block h-80 cursor-pointer overflow-hidden bg-slate-100"
                     aria-label={`View ${kit.name}`}
-                  />
+                  >
+                    <Image
+                      src={kit.image}
+                      alt={kit.name}
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 33vw"
+                      className="object-cover transition duration-300 hover:scale-[1.01]"
+                    />
+                  </Link>
                   <span
                     className={`absolute right-4 top-4 rounded-full px-3 py-1 text-xs font-semibold ${levelBadgeClass[kit.level] || levelBadgeClass.Beginner}`}
                   >

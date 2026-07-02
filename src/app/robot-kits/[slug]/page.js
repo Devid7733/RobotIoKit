@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import AddToCartButton from "@/components/storefront/AddToCartButton";
 import StorefrontShell from "@/components/storefront/StorefrontShell";
@@ -90,10 +91,18 @@ export default async function RobotKitDetailPage({ params }) {
         </nav>
 
         <section className="grid gap-8 lg:grid-cols-[1fr,0.95fr]">
-          <div
-            className="h-[22rem] rounded-[18px] border border-slate-200 bg-slate-50 bg-cover bg-center shadow-[0_14px_34px_rgba(15,23,42,0.05)] sm:h-[36rem]"
-            style={{ backgroundImage: kit.image ? `url(${kit.image})` : undefined }}
-          />
+          <div className="relative h-[22rem] overflow-hidden rounded-[18px] border border-slate-200 bg-slate-50 shadow-[0_14px_34px_rgba(15,23,42,0.05)] sm:h-[36rem]">
+            {kit.image ? (
+              <Image
+                src={kit.image}
+                alt={kit.name}
+                fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                priority
+                className="object-cover"
+              />
+            ) : null}
+          </div>
 
           <div className="pt-1">
             <div className="flex flex-wrap items-center gap-2">

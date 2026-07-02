@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import AddToCartButton from "@/components/storefront/AddToCartButton";
 import Icon from "@/components/common/Icon";
@@ -193,11 +194,15 @@ export default async function ProductsPage({ searchParams }) {
                     className="group flex h-full flex-col overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-[0_14px_34px_rgba(15,23,42,0.05)] transition hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(15,23,42,0.09)]"
                   >
                     <div className="relative">
-                      <Link
-                        href={`/products/${product.slug}`}
-                        className="block h-56 bg-slate-100 bg-cover bg-center"
-                        style={{ backgroundImage: `url(${product.image})` }}
-                      />
+                      <Link href={`/products/${product.slug}`} className="relative block h-56 overflow-hidden bg-slate-100">
+                        <Image
+                          src={product.image}
+                          alt={product.name}
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                          className="object-cover"
+                        />
+                      </Link>
                       <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition duration-200 group-hover:opacity-100">
                         <Link
                           href={`/products/${product.slug}`}

@@ -18,6 +18,8 @@ import {
   updateProduct as updateProductRecord
 } from "@/repositories/productRepository";
 import { countCategories, findCategories, findCategoriesForHome } from "@/repositories/categoryRepository";
+import { unstable_cache } from "next/cache";
+import { cache } from "react";
 
 const categoryIconMap = {
   controllers: "chip",
@@ -368,9 +370,15 @@ export async function listProductCategories() {
   return findCategories();
 }
 
+// Categories rarely change (admin-only edits) but are queried on every storefront
+// page via StorefrontShell's navbar — cache for a few minutes rather than hitting
+// the database on every single request.
+const getCachedCategories = unstable_cache(() => findCategories(), ["storefront-categories"], {
+  revalidate: 300
+});
+
 export async function listStorefrontCategories() {
-  const categories = await findCategories();
-  return categories;
+  return getCachedCategories();
 }
 
 export async function listHomeCategories(limit = 6) {
@@ -433,10 +441,12 @@ export async function listStorefrontVoltageOptions(categorySlug, search) {
   return normalizeVoltageList(products.flatMap((product) => product.voltages || []));
 }
 
-export async function getStorefrontProductBySlug(slug) {
+// Memoized per-request: the product detail page calls this from both
+// generateMetadata() and the page body — cache() collapses those into one query.
+export const getStorefrontProductBySlug = cache(async (slug) => {
   const product = await findProductBySlug(slug);
   return product ? enrichProduct(product) : null;
-}
+});
 
 export async function listRelatedProducts(productId, categoryId) {
   const products = await findRelatedProducts(productId, categoryId);

@@ -7,6 +7,7 @@ import {
   findStorefrontRobotKits,
   updateRobotKit as updateRobotKitRecord
 } from "@/repositories/robotKitRepository";
+import { cache } from "react";
 
 function mapRobotKitRecord(robotKit) {
   if (!robotKit) {
@@ -60,10 +61,12 @@ export async function getRobotKitById(id) {
   return findRobotKitById(id);
 }
 
-export async function getStorefrontRobotKitBySlug(slug) {
+// Memoized per-request: the robot-kit detail page calls this from both
+// generateMetadata() and the page body — cache() collapses those into one query.
+export const getStorefrontRobotKitBySlug = cache(async (slug) => {
   const robotKit = await findStorefrontRobotKitBySlug(slug);
   return mapRobotKitRecord(robotKit);
-}
+});
 
 export async function listAdminRobotKits() {
   return findAdminRobotKits();

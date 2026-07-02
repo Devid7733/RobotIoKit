@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export default function KitCard({ item }) {
@@ -17,9 +18,12 @@ export default function KitCard({ item }) {
               d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
         </div>
-        <div
-          className="absolute inset-0 bg-cover bg-center transition duration-500 group-hover:scale-[1.02]"
-          style={{ backgroundImage: `url(${item.image})` }}
+        <Image
+          src={item.image}
+          alt={item.name}
+          fill
+          sizes="(max-width: 1024px) 100vw, 33vw"
+          className="object-cover transition duration-500 group-hover:scale-[1.02]"
         />
       </Link>
       <div className="flex flex-1 flex-col p-6">
