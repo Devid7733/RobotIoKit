@@ -6,8 +6,10 @@ import { parseCatalogQuery } from "@/modules/chatbot/chatbot.parser";
 import { getChatbotReplyData } from "@/modules/chatbot/chatbot.service";
 import { auth } from "@/lib/auth";
 import { getUserOrdersPaginated } from "@/modules/order/order.service";
+import { rateLimit } from "@/lib/rateLimit";
+import { toClientErrorMessage } from "@/lib/apiError";
 
-const FIXED_FOLLOW_UPS = ["What robot projects can I build?", "Store location", "Delivery fee Information"];
+const FIXED_FOLLOW_UPS = ["Latest robot news", "Track my order", "Store location"];
 
 function isChatbotAiEnabled() {
   return String(process.env.CHATBOT_AI_ENABLED || "").toLowerCase() === "true";
@@ -50,14 +52,44 @@ function buildGroundedSystemPrompt(modelPromptMode, language, orderContext = "")
   const orderSection = orderContext ? `\n\n${orderContext}` : "";
 
   if (modelPromptMode === "educational") {
-    return `You are a friendly robotics tutor and shopping assistant for RobotIoKit, a robotics component store in Phnom Penh, Cambodia.
+    return `You are an expert robotics and electronics tutor and shopping assistant for RobotIoKit, a robotics component store in Phnom Penh, Cambodia.
 Use the STORE TRUTH section in the user prompt as the only source for store products, robot kits, prices, stock, links, and availability.
 You may use general robotics and electronics knowledge for concepts, project logic, algorithms, wiring, and troubleshooting.
 Never invent store product names, prices, stock, URLs, or availability. Only mention products/kits listed in STORE TRUTH.
 Keep official product and model names exactly as provided, in English (e.g., Arduino Uno, ESP32, HC-SR04, L298N, SG90).
 If answering in Khmer, write naturally in Khmer but preserve technical model names in English.
 Be warm and encouraging — many customers are students and beginners.
-Answer as thoroughly as the question needs — a short paragraph or a few bullet points is fine. Don't pad with filler, but don't cut technical detail short either. Be direct and practical.
+Give complete, step-by-step, structured answers: for builds include the parts list, wiring overview, code logic, and how to test; for concepts include how it works and a practical example.
+Don't pad with filler, but don't cut technical detail short either. Be direct and practical.
+Answer in ${responseLanguage}.${orderSection}`;
+  }
+
+  if (modelPromptMode === "general") {
+    return `You are an expert robotics and electronics tutor for RobotIoKit, a robotics component store in Phnom Penh, Cambodia.
+Answer ANY robotics, robot-kit, electronics, embedded-programming, or technology question thoroughly and step by step, like a great teacher.
+Use your full general knowledge — concepts, history, algorithms, wiring, code logic, comparisons, and troubleshooting are all fair game.
+Never invent specific RobotIoKit product names, prices, stock, URLs, or availability; you may only reference the store at the category level described in the user prompt.
+Keep official technical and model names in English (e.g., Arduino Uno, ESP32, HC-SR04, L298N, SG90).
+If answering in Khmer, write naturally in Khmer but preserve technical model names in English.
+Be warm and encouraging — many customers are students and beginners.
+Answer in ${responseLanguage}.${orderSection}`;
+  }
+
+  if (modelPromptMode === "news") {
+    return `You are an expert robotics tutor and news presenter for RobotIoKit, a robotics component store in Phnom Penh, Cambodia.
+The user prompt contains a ROBOT NEWS CONTEXT section fetched from trusted robotics news feeds (IEEE Spectrum, The Robot Report, Robohub, ScienceDaily).
+Treat that section as your ONLY source of current events; always attribute the source and date of each item you mention.
+You may add background explanation from general robotics knowledge, but never invent events, announcements, or dates.
+Keep company names, robot names, and source names in English, even in Khmer answers.
+Be engaging and clear — many readers are students discovering robotics.
+Answer in ${responseLanguage}.${orderSection}`;
+  }
+
+  if (modelPromptMode === "order_status") {
+    return `You are a helpful order-status assistant for RobotIoKit, a robotics component store in Phnom Penh, Cambodia.
+The user is asking about their order status or tracking. Rely ONLY on the CUSTOMER'S RECENT ORDERS section below, if present, for the order number, status, date, and total.
+Never invent an order number, status, date, or total.
+If no CUSTOMER'S RECENT ORDERS section is present, or it says no orders were found, politely tell the user to sign in to their account and check the Orders page, or contact the store with their order number for help.
 Answer in ${responseLanguage}.${orderSection}`;
   }
 
@@ -79,6 +111,18 @@ export async function POST(request) {
 
   function send(controller, data) {
     controller.enqueue(encoder.encode(JSON.stringify(data) + "\n"));
+  }
+
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+    request.headers.get("x-real-ip") ??
+    "unknown";
+
+  if (!rateLimit(ip)) {
+    return new Response(
+      JSON.stringify({ ok: false, message: "Too many requests. Please try again later." }),
+      { status: 429, headers: { "Content-Type": "application/json" } }
+    );
   }
 
   let body;
@@ -121,7 +165,7 @@ export async function POST(request) {
     chatbotReply = await getChatbotReplyData(body?.message, { lastRecommendedItems: body?.lastRecommendedItems });
   } catch (error) {
     return new Response(
-      JSON.stringify({ ok: false, message: error instanceof Error ? error.message : "Unable to get chatbot response." }),
+      JSON.stringify({ ok: false, message: toClientErrorMessage(error, "Unable to get chatbot response.") }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
@@ -143,6 +187,7 @@ export async function POST(request) {
           items: chatbotReply.catalogMatches || [],
           followUps: FIXED_FOLLOW_UPS,
           locationLink: chatbotReply.locationLink || "",
+          news: chatbotReply.newsItems || [],
           language: chatbotReply.language
         });
 
@@ -154,11 +199,15 @@ export async function POST(request) {
             { role: "user", content: chatbotReply.modelPrompt }
           ];
 
+          // Deep tutor/news answers need more room, especially in Khmer
+          // (Khmer script tokenizes at roughly 2-3x tokens per visible character)
+          const maxTokens = ["educational", "general", "news"].includes(chatbotReply.modelPromptMode) ? 1400 : 1100;
+
           let accumulated = "";
           let aiSucceeded = false;
 
           try {
-            for await (const chunk of streamAiChat(messages)) {
+            for await (const chunk of streamAiChat(messages, { maxTokens })) {
               accumulated += chunk;
               send(controller, { type: "text", delta: chunk });
             }
@@ -193,7 +242,7 @@ export async function POST(request) {
         try {
           send(controller, {
             type: "error",
-            message: error instanceof Error ? error.message : "Unable to get chatbot response."
+            message: toClientErrorMessage(error, "Unable to get chatbot response.")
           });
         } catch {}
       } finally {

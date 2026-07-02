@@ -14,6 +14,7 @@ import {
   localizeMatchedRuleAnswer as localizeMatchedRuleAnswerFromResponse
 } from "@/modules/chatbot/chatbot.response";
 import { isInShopScope as isInShopScopeFromScope } from "@/modules/chatbot/chatbot.scope";
+import { detectNewsIntent, getNewsResponse } from "@/modules/chatbot/chatbot.news";
 import {
   buildGroundedOllamaPrompt as buildCatalogGroundedOllamaPrompt,
   buildFallbackMetadataForItem,
@@ -1468,7 +1469,7 @@ Response language:
 ${responseLanguage}
 
 Database catalog context, containing the only products and robot kits you may recommend:
-${JSON.stringify(catalogContext, null, 2)}
+${JSON.stringify(catalogContext)}
 
 Grounded draft reply:
 ${draftReply}
@@ -1503,10 +1504,10 @@ includeDescriptions:
 true
 
 Matched database catalog context. These are the only catalog items you may discuss:
-${JSON.stringify(catalogContext, null, 2)}
+${JSON.stringify(catalogContext)}
 
 Recent referenced items, if the user used words like this, it, first one, controller, or similar:
-${JSON.stringify(recentContext, null, 2)}
+${JSON.stringify(recentContext)}
 
 Strict rules:
 - Answer only from the provided catalog context.
@@ -1539,7 +1540,7 @@ ${projectTypes.join(", ") || "none"}
 
 A. STORE TRUTH:
 Only these products/kits exist in the RobotIoKit store. Product cards are rendered by the application from this same data:
-${JSON.stringify(catalogContext, null, 2)}
+${JSON.stringify(catalogContext)}
 
 Inferred metadata in STORE TRUTH, when present:
 - category and subcategories
@@ -1865,7 +1866,13 @@ function isRobotProjectOverviewQuestion(input = "") {
 }
 
 function isStoreLocationQuestion(input = "") {
-  return /\b(store\s+location|shop\s+location|where\s+are\s+you|where\s+is\s+the\s+store|address|pickup)\b/i.test(input);
+  // Khmer checked against the raw text kept by normalizeKhmerQuery — the
+  // ទីតាំង synonym expands to "delivery ... location" tokens, which would
+  // otherwise mis-route store-location questions to the delivery-fee reply.
+  return (
+    /\b(store\s+location|shop\s+location|where\s+are\s+you|where\s+is\s+the\s+store|address|pickup)\b/i.test(input) ||
+    /ទីតាំង|អាសយដ្ឋាន|ហាងនៅឯណា/.test(input)
+  );
 }
 
 function isDeliveryFeeQuestion(input = "") {
@@ -3057,6 +3064,7 @@ function detectEducationalIntent(rawMessage = "", normalizedInput = "") {
   const isProjectTopic =
     projectTypes.length > 0 ||
     /\b(black line|white line|line[\s-]*(following|follower)?|obstacle[\s-]*(avoiding|avoidance)|robot car|dc motors?|motors?|sensor|environment|monitoring|temperature|humidity|wireless|communication|power|voltage|battery|display)\b/i.test(input) ||
+    /\b(pid|slam|pwm|imu|encoder|servo|microcontroller|algorithm|control\s+loop|kinematics|odometry)\b/i.test(input) ||
     /រ៉ូបូត|ខ្សែ|ឧបសគ្គ|ម៉ូទ័រ|សេនស័រ/.test(rawMessage);
   const isBuyingIntent = /\b(show|buy|price|stock|available|cheap|budget|recommend|what should i buy)\b/i.test(input);
 
@@ -4061,9 +4069,18 @@ async function getRuleBasedCatalogData(input, parsedQuery, language = "en") {
 function shouldTryAiPlannerBeforeCatalog(rawMessage = "", input = "", parsedQuery = null, earlyEducationalIntent = null) {
   const normalized = normalizeQuery(input || rawMessage);
   const rawLower = String(rawMessage || "").toLowerCase();
+  const hasProjectGoal =
+    /\b(i want|i need|looking for|something (for|to)|recommend|suggest|which should i (buy|use|get)|school project|for my project|follow a line|line follow|obstacle|robot car)\b/i.test(normalized) ||
+    /ចង់បាន|ត្រូវការ|គម្រោងសាលា|កិច្ចការសាលា|ណែនាំ/.test(rawLower);
 
-  if (parsedQuery?.intent === "catalog_filter" && parsedQuery?.filters?.price) {
+  // A plain price filter ("products under $30") is faster deterministically,
+  // but a goal + budget ("line follower for school, under $30") needs the planner.
+  if (parsedQuery?.intent === "catalog_filter" && parsedQuery?.filters?.price && !hasProjectGoal) {
     return false;
+  }
+
+  if (hasProjectGoal) {
+    return true;
   }
 
   if (
@@ -4088,6 +4105,60 @@ function shouldTryAiPlannerBeforeCatalog(rawMessage = "", input = "", parsedQuer
   return false;
 }
 
+function buildGeneralKnowledgeModelPrompt({ message, storeTeaser, language }) {
+  const responseLanguage = language === "km" ? "Khmer" : "English";
+
+  return `User message:
+${message}
+
+Detected language:
+${responseLanguage}
+
+STORE OVERVIEW (high level only — you do NOT have the product catalog for this answer):
+${storeTeaser || "RobotIoKit sells robotics components and robot kits in Phnom Penh, Cambodia."}
+
+You are answering a general robotics/electronics/technology question. Rules:
+- Answer in depth like a tutor: the concept, how it works, a practical example, and (when useful) how the customer could try it themselves with common parts.
+- If store products are relevant, you may mention that RobotIoKit sells parts in the categories listed above — but never invent specific product names, prices, stock, or availability.
+- Keep official technical and model names in English (e.g., Arduino Uno, ESP32, HC-SR04, L298N, SG90) even in Khmer answers.
+- If the question is completely unrelated to robotics, electronics, programming, or the store, answer briefly and politely steer back to robotics topics.
+- Answer in ${responseLanguage}.`;
+}
+
+async function getGeneralKnowledgeResponse(rawMessage, language = "en") {
+  let storeTeaser = "";
+
+  try {
+    const [products, robotKits] = await Promise.all([listStorefrontProducts(), listStorefrontRobotKits()]);
+    const categories = getKnownCatalogCategories(products);
+    const productPrices = products.map((product) => Number(product.price)).filter(Number.isFinite);
+    const kitPrices = robotKits.map((kit) => Number(kit.price)).filter(Number.isFinite);
+    const teaser = [`RobotIoKit (Phnom Penh) sells parts in these categories: ${categories.join(", ") || "robotics components"}.`];
+
+    if (productPrices.length) {
+      teaser.push(`Component prices range from $${Math.min(...productPrices).toFixed(2)} to $${Math.max(...productPrices).toFixed(2)}.`);
+    }
+
+    if (kitPrices.length) {
+      teaser.push(`Robot kits range from $${Math.min(...kitPrices).toFixed(2)} to $${Math.max(...kitPrices).toFixed(2)}.`);
+    }
+
+    storeTeaser = teaser.join(" ");
+  } catch {
+    // teaser is optional — a general answer must not depend on the database
+  }
+
+  return {
+    reply: getLowConfidenceReplyFromResponse(language),
+    catalogSummary: null,
+    catalogMatches: [],
+    followUps: getClarifyingCatalogFollowUpsFromResponse(language),
+    modelPrompt: buildGeneralKnowledgeModelPrompt({ message: rawMessage, storeTeaser, language }),
+    modelPromptMode: "general",
+    responseMode: "general_qa"
+  };
+}
+
 export async function getChatbotReplyData(message = "", { lastRecommendedItems = [] } = {}) {
   const rawMessage = String(message || "").trim();
   const input = normalizeKhmerQuery(rawMessage).toLowerCase();
@@ -4100,12 +4171,21 @@ export async function getChatbotReplyData(message = "", { lastRecommendedItems =
   const hasRecentContextReference = normalizeContextItems(lastRecommendedItems).length > 0 && detectContextFollowUp(input);
   const hasCatalogDetailIntent = isProductDetailRequest(input);
 
+  if (detectNewsIntent(rawMessage)) {
+    try {
+      return {
+        ...(await getNewsResponse(rawMessage, language)),
+        language
+      };
+    } catch (error) {
+      logChatbotServiceEvent("news_failed", { message: error instanceof Error ? error.message : String(error) });
+    }
+  }
+
   if (!isInShopScopeFromScope(input) && !hasRecentContextReference && !hasCatalogDetailIntent) {
+    logChatbotServiceEvent("out_of_shop_scope", { input: input.slice(0, 120) });
     return {
-      reply: getLowConfidenceReplyFromResponse(language),
-      catalogSummary: null,
-      catalogMatches: [],
-      followUps: getClarifyingCatalogFollowUpsFromResponse(language),
+      ...(await getGeneralKnowledgeResponse(rawMessage, language)),
       language
     };
   }
@@ -4286,10 +4366,7 @@ export async function getChatbotReplyData(message = "", { lastRecommendedItems =
   }
 
   return {
-    reply: getLowConfidenceReplyFromResponse(language),
-    catalogSummary: null,
-    catalogMatches: [],
-    followUps: getClarifyingCatalogFollowUpsFromResponse(language),
+    ...(await getGeneralKnowledgeResponse(rawMessage, language)),
     language
   };
 }

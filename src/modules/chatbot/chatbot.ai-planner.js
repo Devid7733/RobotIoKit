@@ -79,17 +79,10 @@ function cleanStringArray(value) {
     : [];
 }
 
+// Name + slug only — aliases/tags/compatibility roughly doubled the planner
+// prompt without improving plan quality (the app resolves mentions later).
 function getCatalogItemIdentity(item) {
-  return [
-    item.name,
-    item.slug,
-    item.sku,
-    ...(Array.isArray(item.aliases) ? item.aliases : []),
-    ...(Array.isArray(item.tags) ? item.tags : []),
-    ...(Array.isArray(item.compatibility) ? item.compatibility : [])
-  ]
-    .filter(Boolean)
-    .join(" ");
+  return [item.name, item.slug].filter(Boolean).join(" ");
 }
 
 function getPriceStats(items = []) {
@@ -205,6 +198,20 @@ Alternative JSON shape for store-data fallback questions:
 }
 
 Never create orders, update orders, update payments, access admin data, access users, access secrets, generate SQL, generate raw Prisma queries, or request arbitrary tables.
+
+Planning rules:
+- When the user states a budget, always set filters.priceMax and/or filters.priceMin.
+- When the user describes a goal instead of a product, prefer intent recommend_project_parts with projectTypes and neededCategories.
+
+Examples:
+User: "something for my school project to follow a line, under $30"
+Plan: {"intent":"recommend_project_parts","goal":"line follower school project under $30","itemType":"product","categories":[],"projectTypes":["line_follower"],"productMentions":[],"neededCategories":["Sensors","Controllers","Motors & Drivers","Power"],"filters":{"priceMax":30,"stock":"in_stock"},"sort":{"field":"relevance","direction":"desc"},"needsStoreProducts":true,"needsGeneralRoboticsKnowledge":true,"responseMode":"project_recommendation","confidence":0.85}
+
+User: "ខ្ញុំចង់បានអ្វីមួយសម្រាប់គម្រោងសាលា ដើរតាមខ្សែ ក្រោម $30"
+Plan: {"intent":"recommend_project_parts","goal":"line follower school project under $30","itemType":"product","categories":[],"projectTypes":["line_follower"],"productMentions":[],"neededCategories":["Sensors","Controllers","Motors & Drivers","Power"],"filters":{"priceMax":30,"stock":"in_stock"},"sort":{"field":"relevance","direction":"desc"},"needsStoreProducts":true,"needsGeneralRoboticsKnowledge":true,"responseMode":"project_recommendation","confidence":0.85}
+
+User: "which robot kit is best for a total beginner?"
+Plan: {"intent":"catalog_query","goal":"beginner robot kit recommendation","itemType":"kit","categories":[],"projectTypes":["general_robotics"],"productMentions":[],"neededCategories":[],"filters":{"stock":"in_stock"},"sort":{"field":"relevance","direction":"desc"},"needsStoreProducts":true,"needsGeneralRoboticsKnowledge":false,"responseMode":"project_recommendation","confidence":0.8}
 
 Safe catalog summary:
 ${catalogSummary}
@@ -504,6 +511,9 @@ function buildLocalPlan({ userMessage, normalizedQuery, language, knownCategorie
     };
   }
 
+  const wantsProduct =
+    /\b(i want|i need|looking for|buy|purchase)\b/.test(query) || /ចង់បាន|ចង់ទិញ|ត្រូវការ/.test(rawLower);
+
   const isShoppingQuery =
     wantsProduct ||
     isKitQuery ||
@@ -744,7 +754,7 @@ export async function buildAiChatPlan({ userMessage, normalizedQuery, language, 
         knownProjectTypes
       })
     }
-  ]);
+  ], { maxTokens: 500 });
   const modelPlan = validateAiChatPlan(extractJsonObject(content), {
     knownCategories,
     knownProjectTypes,

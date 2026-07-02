@@ -56,6 +56,21 @@ export function localizeMatchedRuleAnswer(answer, language) {
   return answer;
 }
 
+function buildOrderStatusModelPrompt(input, language) {
+  const responseLanguage = language === "km" ? "Khmer" : "English";
+
+  return `User message:
+${input}
+
+Detected language:
+${responseLanguage}
+
+The user is asking about their order status or tracking. A CUSTOMER'S RECENT ORDERS section may be appended separately below this message — use ONLY that section to state the real order number, status, date, and total.
+Never invent an order number, status, date, or total.
+If no CUSTOMER'S RECENT ORDERS section is present, or it indicates no orders were found, politely tell the user to sign in to their account and check the Orders page, or contact the store with their order number for help.
+Answer in ${responseLanguage}.`;
+}
+
 export function getDirectFaqResponse(input, language) {
   if (input.includes("return") || input.includes("cancel") || input.includes("refund")) {
     return {
@@ -85,6 +100,9 @@ export function getDirectFaqResponse(input, language) {
       catalogSummary: null,
       catalogMatches: [],
       followUps: [],
+      modelPrompt: buildOrderStatusModelPrompt(input, language),
+      modelPromptMode: "order_status",
+      responseMode: "order_status",
       language
     };
   }

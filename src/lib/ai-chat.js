@@ -8,7 +8,7 @@ function seaLionHeaders() {
   };
 }
 
-export async function callAiChat(messages = []) {
+export async function callAiChat(messages = [], { maxTokens = 1100 } = {}) {
   try {
     const response = await fetch(`${SEA_LION_BASE_URL}/chat/completions`, {
       method: "POST",
@@ -16,7 +16,7 @@ export async function callAiChat(messages = []) {
       body: JSON.stringify({
         model: process.env.SEA_LION_MODEL || DEFAULT_SEA_LION_MODEL,
         stream: false,
-        max_completion_tokens: 1100,
+        max_completion_tokens: maxTokens,
         messages
       }),
       cache: "no-store",
@@ -46,14 +46,14 @@ export async function callAiChat(messages = []) {
   }
 }
 
-export async function* streamAiChat(messages = []) {
+export async function* streamAiChat(messages = [], { maxTokens = 1100 } = {}) {
   const response = await fetch(`${SEA_LION_BASE_URL}/chat/completions`, {
     method: "POST",
     headers: seaLionHeaders(),
     body: JSON.stringify({
       model: process.env.SEA_LION_MODEL || DEFAULT_SEA_LION_MODEL,
       stream: true,
-      max_completion_tokens: 1100,
+      max_completion_tokens: maxTokens,
       messages
     }),
     cache: "no-store",

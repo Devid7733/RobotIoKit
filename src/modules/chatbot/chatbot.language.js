@@ -18,7 +18,11 @@ const KHMER_SYNONYMS = [
   { terms: ["យ៉ាងដូចម្តេច"], tokens: "how to build project" },
   { terms: ["restart", "រីស្តាត"], tokens: "restart brownout power troubleshooting" },
   { terms: ["ការបញ្ជាទិញ", "ស្ថានភាព", "តាមដាន"], tokens: "order status tracking" },
-  { terms: ["ប្តូរ", "ត្រឡប់", "បោះបង់", "សងប្រាក់"], tokens: "return cancel refund" }
+  { terms: ["ប្តូរ", "ត្រឡប់", "បោះបង់", "សងប្រាក់"], tokens: "return cancel refund" },
+  { terms: ["ព័ត៌មាន", "ដំណឹង", "ព័ត៌មានថ្មី", "បច្ចុប្បន្នភាព"], tokens: "news latest headlines" },
+  { terms: ["គម្រោងសាលា", "កិច្ចការសាលា"], tokens: "school project" },
+  { terms: ["ចង់បាន", "ចង់ទិញ"], tokens: "want buy looking for" },
+  { terms: ["របៀបធ្វើ", "ជំហាន", "ណែនាំ"], tokens: "how to steps instructions recommend" }
 ];
 
 const FOLLOW_UP_TRANSLATIONS = {
@@ -42,7 +46,10 @@ const FOLLOW_UP_TRANSLATIONS = {
   ,
   "Is it compatible with Arduino?": "វាប្រើជាមួយ Arduino បានទេ?",
   "Show similar products": "បង្ហាញផលិតផលស្រដៀង",
-  "Explain the controller": "ពន្យល់អំពី controller"
+  "Explain the controller": "ពន្យល់អំពី controller",
+  "Latest robot news": "ព័ត៌មានរ៉ូបូតថ្មីៗ",
+  "More robot news": "ព័ត៌មានរ៉ូបូតបន្ថែម",
+  "Explain step by step": "ពន្យល់ជាជំហានៗ"
 };
 
 export function detectLanguage(text = "") {

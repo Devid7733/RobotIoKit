@@ -5,11 +5,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Icon from "@/components/common/Icon";
 
 const STORAGE_KEY = "robotiokit-chat-history";
-const FIXED_FOLLOW_UPS = ["What robot projects I can build", "Store location", "Delivery fee"];
+const FIXED_FOLLOW_UPS = {
+  en: ["Latest robot news", "Track my order", "Store location"],
+  km: ["ព័ត៌មានរ៉ូបូតថ្មីៗ", "ស្ថានភាពការបញ្ជាទិញរបស់ខ្ញុំ", "ទីតាំងហាង"]
+};
 
 const quickPrompts = {
   en: [
     "What robot projects can I build?",
+    "Latest robot news",
     "Track my order",
     "Build a line-following robot",
     "Build an obstacle-avoiding robot",
@@ -18,6 +22,7 @@ const quickPrompts = {
   ],
   km: [
     "បង្ហាញ robot kits ប៉ុណ្ណោះ",
+    "ព័ត៌មានរ៉ូបូតថ្មីៗ",
     "ស្ថានភាពការបញ្ជាទិញរបស់ខ្ញុំ",
     "ខ្ញុំចង់ធ្វើឡានរ៉ូបូតពេញលេញ",
     "គម្រោង Arduino សម្រាប់អ្នកចាប់ផ្តើម",
@@ -30,8 +35,8 @@ const fallbackPrompts = {
   km: ["បង្ហាញ robot kits ប៉ុណ្ណោះ", "ខ្ញុំចង់ធ្វើឡានរ៉ូបូតពេញលេញ", "បង្ហាញ sensor តម្លៃថោក"]
 };
 
-fallbackPrompts.en = FIXED_FOLLOW_UPS;
-fallbackPrompts.km = FIXED_FOLLOW_UPS;
+fallbackPrompts.en = FIXED_FOLLOW_UPS.en;
+fallbackPrompts.km = FIXED_FOLLOW_UPS.km;
 
 function sanitizeRecommendedItem(item) {
   return {
@@ -66,8 +71,8 @@ function createWelcomeMessage(language = "en") {
     role: "bot",
     content:
       language === "km"
-        ? "សួស្តី! សួរខ្ញុំអំពី robot kits, parts, compatibility, KHQR ឬការដឹកជញ្ជូន។"
-        : "Hi! I can help you find robot kits, sensors, controllers, motors, and beginner parts.",
+        ? "សួស្តី! សួរខ្ញុំអ្វីក៏បានអំពី robotics — kits, parts, compatibility, របៀបសាងសង់គម្រោង ឬព័ត៌មានរ៉ូបូតថ្មីៗ!"
+        : "Hi! Ask me anything about robotics — kits, parts, how to build projects, or the latest robot news!",
     items: [],
     followUps: [],
     language
@@ -511,16 +516,18 @@ export default function ChatWindow({ onClose }) {
                 return updated;
               });
             } else if (event.type === "done") {
-              if (event.cleanedText) {
-                setMessages((prev) => {
-                  const updated = [...prev];
-                  const last = updated[updated.length - 1];
-                  if (last?.role === "bot") {
-                    updated[updated.length - 1] = { ...last, content: event.cleanedText };
-                  }
-                  return updated;
-                });
-              }
+              setMessages((prev) => {
+                const updated = [...prev];
+                const last = updated[updated.length - 1];
+                if (last?.role === "bot") {
+                  updated[updated.length - 1] = {
+                    ...last,
+                    ...(event.cleanedText ? { content: event.cleanedText } : {}),
+                    followUps: FIXED_FOLLOW_UPS[botLanguage] || FIXED_FOLLOW_UPS.en
+                  };
+                }
+                return updated;
+              });
             } else if (event.type === "error") {
               setMessages((prev) => {
                 const updated = [...prev];
@@ -579,7 +586,7 @@ export default function ChatWindow({ onClose }) {
         </div>
         <div className="min-w-0 flex-1">
           <div className="font-display text-base font-semibold leading-5">Robot Assistant</div>
-          <p className="mt-0.5 truncate text-xs leading-5 text-blue-50">Ask about kits, parts, KHQR, or delivery</p>
+          <p className="mt-0.5 truncate text-xs leading-5 text-blue-50">Ask anything about robotics, kits, or robot news</p>
         </div>
         <button
           type="button"
