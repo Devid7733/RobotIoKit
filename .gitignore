@@ -25,6 +25,7 @@ CLAUDE.md
 .codex/
 .cursor/
 .cursorrules
+.claude/settings.local.json
 
 # Runtime logs and temporary files
 *.log
@@ -34,7 +35,10 @@ tmp/
 temp/
 
 # User-generated uploads
-public/uploads/
+public/uploads/*
+!public/uploads/avatars/
+public/uploads/avatars/*
+!public/uploads/avatars/.gitkeep
 
 # Local databases
 *.db
