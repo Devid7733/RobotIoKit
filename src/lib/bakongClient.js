@@ -18,14 +18,26 @@ export async function checkBakongTransactionByMd5(md5) {
     throw error;
   }
 
-  const response = await fetch(`${baseUrl.replace(/\/$/, "")}/v1/check_transaction_by_md5`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiToken}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ md5 })
-  });
+  let response;
+  try {
+    response = await fetch(`${baseUrl.replace(/\/$/, "")}/v1/check_transaction_by_md5`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiToken}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ md5 }),
+      signal: AbortSignal.timeout(15000)
+    });
+  } catch (error) {
+    if (error.name === "TimeoutError" || error.name === "AbortError") {
+      const timeoutError = new Error("Payment verification timed out. Please try again.");
+      timeoutError.status = 504;
+      throw timeoutError;
+    }
+    throw error;
+  }
+
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {

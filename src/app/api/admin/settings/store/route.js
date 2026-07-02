@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getAdminStoreSettings, updateAdminStoreSettings } from "@/modules/admin/admin.service";
 
+import { toClientErrorMessage } from "@/lib/apiError";
 async function requireAdmin() {
   const session = await auth();
 
@@ -24,7 +25,7 @@ export async function GET() {
     return NextResponse.json({ ok: true, data: settings });
   } catch (error) {
     return NextResponse.json(
-      { ok: false, message: error instanceof Error ? error.message : "Unable to load store settings." },
+      { ok: false, message: toClientErrorMessage(error, "Unable to load store settings.") },
       { status: 500 }
     );
   }
@@ -43,7 +44,7 @@ export async function PATCH(request) {
     return NextResponse.json({ ok: true, data: settings });
   } catch (error) {
     return NextResponse.json(
-      { ok: false, message: error instanceof Error ? error.message : "Unable to save store settings." },
+      { ok: false, message: toClientErrorMessage(error, "Unable to save store settings.") },
       { status: error?.status || 500 }
     );
   }

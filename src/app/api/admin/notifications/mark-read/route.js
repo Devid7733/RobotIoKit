@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { markAdminNotificationsRead } from "@/modules/admin/admin.service";
 
+import { toClientErrorMessage } from "@/lib/apiError";
 export async function POST(request) {
   try {
     const session = await auth();
@@ -19,7 +20,7 @@ export async function POST(request) {
     });
   } catch (error) {
     return NextResponse.json(
-      { ok: false, message: error instanceof Error ? error.message : "Unable to mark notifications read." },
+      { ok: false, message: toClientErrorMessage(error, "Unable to mark notifications read.") },
       { status: error?.status || 500 }
     );
   }

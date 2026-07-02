@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { adminCustomerForbiddenResponse, isAdminSession } from "@/lib/roleAccess";
+import { toClientErrorMessage } from "@/lib/apiError";
 import {
   addToCart,
   clearCart,
@@ -10,7 +11,7 @@ import {
 } from "@/modules/cart/cart.service";
 
 function errorMessage(error) {
-  return error instanceof Error ? error.message : "Unexpected server error.";
+  return toClientErrorMessage(error, "Unexpected server error.");
 }
 
 export async function GET() {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { createRobotKit, listStorefrontRobotKits } from "@/services/robotKitService";
 
+import { toClientErrorMessage } from "@/lib/apiError";
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -13,7 +14,7 @@ export async function GET(request) {
     return NextResponse.json(
       {
         ok: false,
-        message: error instanceof Error ? error.message : "Unable to load robot kits."
+        message: toClientErrorMessage(error, "Unable to load robot kits.")
       },
       { status: 500 }
     );
@@ -36,7 +37,7 @@ export async function POST(request) {
     return NextResponse.json(
       {
         ok: false,
-        message: error instanceof Error ? error.message : "Unable to create robot kit."
+        message: toClientErrorMessage(error, "Unable to create robot kit.")
       },
       { status: error?.status || 500 }
     );

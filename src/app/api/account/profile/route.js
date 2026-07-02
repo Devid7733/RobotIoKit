@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getAccountProfile, updateAccountProfile } from "@/modules/account/account.service";
 
+import { toClientErrorMessage } from "@/lib/apiError";
 export async function GET() {
   try {
     const session = await auth();
@@ -19,7 +20,7 @@ export async function GET() {
     return NextResponse.json({ ok: true, data: user });
   } catch (error) {
     return NextResponse.json(
-      { ok: false, message: error instanceof Error ? error.message : "Unable to load profile." },
+      { ok: false, message: toClientErrorMessage(error, "Unable to load profile.") },
       { status: 500 }
     );
   }
@@ -42,7 +43,7 @@ export async function PATCH(request) {
     return NextResponse.json(
       {
         ok: false,
-        message: error instanceof Error ? error.message : "Unable to update profile.",
+        message: toClientErrorMessage(error, "Unable to update profile."),
         fields: error?.fields || {}
       },
       { status: error?.status || 500 }

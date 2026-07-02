@@ -1,15 +1,17 @@
 import prisma from "@/lib/prisma";
 
 const orderInclude = {
-  user: true,
+  // Only fields actually read downstream (formatOrder, admin/customer order UIs) —
+  // full User rows previously leaked password/OTP hashes to the browser via this include.
+  user: { select: { email: true } },
   payment: true,
   timeline: {
     orderBy: { createdAt: "desc" }
   },
   items: {
     include: {
-      product: true,
-      robotKit: true
+      product: { select: { name: true, slug: true, imageUrl: true } },
+      robotKit: { select: { name: true, slug: true, image: true } }
     }
   }
 };

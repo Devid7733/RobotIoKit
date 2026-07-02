@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getAnalyticsOrderData } from "@/modules/order/order.service";
 
+import { toClientErrorMessage } from "@/lib/apiError";
 const periodToMonths = {
   "1m": 1,
   "3m": 3,
@@ -145,7 +146,7 @@ export async function GET(request) {
     return NextResponse.json(
       {
         ok: false,
-        message: error instanceof Error ? error.message : "Unable to load analytics."
+        message: toClientErrorMessage(error, "Unable to load analytics.")
       },
       { status: 500 }
     );

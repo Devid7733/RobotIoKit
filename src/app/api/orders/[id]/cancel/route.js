@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { adminCustomerForbiddenResponse, isAdminSession } from "@/lib/roleAccess";
 import { cancelCustomerOrder } from "@/modules/order/order.service";
 
+import { toClientErrorMessage } from "@/lib/apiError";
 export async function POST(_request, { params }) {
   try {
     const session = await auth();
@@ -25,7 +26,7 @@ export async function POST(_request, { params }) {
     return NextResponse.json({ ok: true, data: order });
   } catch (error) {
     return NextResponse.json(
-      { ok: false, message: error instanceof Error ? error.message : "Unable to cancel order." },
+      { ok: false, message: toClientErrorMessage(error, "Unable to cancel order.") },
       { status: error?.status || 500 }
     );
   }

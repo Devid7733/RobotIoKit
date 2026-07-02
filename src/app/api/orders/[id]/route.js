@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getOrderByIdForUser, updateOrderByAdmin } from "@/modules/order/order.service";
 
+import { toClientErrorMessage } from "@/lib/apiError";
 export async function GET(request, { params }) {
   try {
     const session = await auth();
@@ -19,7 +20,7 @@ export async function GET(request, { params }) {
     return NextResponse.json({ ok: true, data: order });
   } catch (error) {
     return NextResponse.json(
-      { ok: false, message: error instanceof Error ? error.message : "Unexpected server error." },
+      { ok: false, message: toClientErrorMessage(error, "Unexpected server error.") },
       { status: error?.status || 500 }
     );
   }
@@ -43,7 +44,7 @@ export async function PATCH(request, { params }) {
     return NextResponse.json({ ok: true, data: order });
   } catch (error) {
     return NextResponse.json(
-      { ok: false, message: error instanceof Error ? error.message : "Unexpected server error." },
+      { ok: false, message: toClientErrorMessage(error, "Unexpected server error.") },
       { status: error?.status || 500 }
     );
   }

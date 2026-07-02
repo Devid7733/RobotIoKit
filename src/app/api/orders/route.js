@@ -4,6 +4,7 @@ import { adminCustomerForbiddenResponse, isAdminSession } from "@/lib/roleAccess
 import { getCart } from "@/modules/cart/cart.service";
 import { createOrderFromCart, listOrdersPaginated } from "@/modules/order/order.service";
 
+import { toClientErrorMessage } from "@/lib/apiError";
 export async function GET(request) {
   try {
     const session = await auth();
@@ -28,7 +29,7 @@ export async function GET(request) {
     return NextResponse.json(
       {
         ok: false,
-        message: error instanceof Error ? error.message : "Unable to load orders."
+        message: toClientErrorMessage(error, "Unable to load orders.")
       },
       { status: 500 }
     );

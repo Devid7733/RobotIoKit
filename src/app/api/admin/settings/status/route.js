@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getAdminSettingsStatus } from "@/modules/admin/admin.service";
 
+import { toClientErrorMessage } from "@/lib/apiError";
 export async function GET() {
   try {
     const session = await auth();
@@ -18,7 +19,7 @@ export async function GET() {
     });
   } catch (error) {
     return NextResponse.json(
-      { ok: false, message: error instanceof Error ? error.message : "Unable to load settings status." },
+      { ok: false, message: toClientErrorMessage(error, "Unable to load settings status.") },
       { status: 500 }
     );
   }

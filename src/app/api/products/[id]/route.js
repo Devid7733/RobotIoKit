@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { deleteProduct, getProductById, updateProduct } from "@/services/productService";
 
+import { toClientErrorMessage } from "@/lib/apiError";
 function getErrorMessage(error) {
-  return error instanceof Error ? error.message : "Unexpected server error.";
+  return toClientErrorMessage(error, "Unexpected server error.");
 }
 
 export async function GET(request, { params }) {

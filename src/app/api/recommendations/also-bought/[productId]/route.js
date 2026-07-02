@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAlsoBoughtProducts } from "@/services/productService";
 
+import { toClientErrorMessage } from "@/lib/apiError";
 export async function GET(request, { params }) {
   try {
     const { productId } = params;
@@ -15,7 +16,7 @@ export async function GET(request, { params }) {
     return NextResponse.json({ ok: true, data: products });
   } catch (error) {
     return NextResponse.json(
-      { ok: false, message: error instanceof Error ? error.message : "Unable to load recommendations." },
+      { ok: false, message: toClientErrorMessage(error, "Unable to load recommendations.") },
       { status: 500 }
     );
   }

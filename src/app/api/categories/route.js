@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
+import { toClientErrorMessage } from "@/lib/apiError";
 function slugify(value) {
   return String(value || "")
     .toLowerCase()
@@ -28,7 +29,7 @@ export async function GET() {
     return NextResponse.json(
       {
         ok: false,
-        message: error instanceof Error ? error.message : "Unable to load categories."
+        message: toClientErrorMessage(error, "Unable to load categories.")
       },
       { status: 500 }
     );
@@ -64,7 +65,7 @@ export async function POST(request) {
     return NextResponse.json(
       {
         ok: false,
-        message: error instanceof Error ? error.message : "Unable to create category."
+        message: toClientErrorMessage(error, "Unable to create category.")
       },
       { status: 500 }
     );

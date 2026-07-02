@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import { randomUUID } from "crypto";
 import path from "path";
 
+import { toClientErrorMessage } from "@/lib/apiError";
 const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
@@ -74,7 +75,7 @@ export async function GET() {
     return NextResponse.json({ ok: true, data: media });
   } catch (error) {
     return NextResponse.json(
-      { ok: false, message: error instanceof Error ? error.message : "Unable to load media." },
+      { ok: false, message: toClientErrorMessage(error, "Unable to load media.") },
       { status: 500 }
     );
   }
@@ -118,7 +119,7 @@ export async function POST(request) {
     );
   } catch (error) {
     return NextResponse.json(
-      { ok: false, message: error instanceof Error ? error.message : "Unable to upload image." },
+      { ok: false, message: toClientErrorMessage(error, "Unable to upload image.") },
       { status: 500 }
     );
   }
@@ -156,7 +157,7 @@ export async function DELETE(request) {
     return NextResponse.json({ ok: true, message: "Media deleted." });
   } catch (error) {
     return NextResponse.json(
-      { ok: false, message: error instanceof Error ? error.message : "Unable to delete media." },
+      { ok: false, message: toClientErrorMessage(error, "Unable to delete media.") },
       { status: 500 }
     );
   }

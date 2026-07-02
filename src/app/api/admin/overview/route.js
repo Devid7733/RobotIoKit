@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { getAdminOrderOverview } from "@/modules/order/order.service";
 
+import { toClientErrorMessage } from "@/lib/apiError";
 export async function GET() {
   try {
     const session = await auth();
@@ -44,7 +45,7 @@ export async function GET() {
     return NextResponse.json(
       {
         ok: false,
-        message: error instanceof Error ? error.message : "Unable to load admin overview."
+        message: toClientErrorMessage(error, "Unable to load admin overview.")
       },
       { status: 500 }
     );
