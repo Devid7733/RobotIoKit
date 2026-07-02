@@ -87,6 +87,9 @@ export default function Footer() {
 
         <div className="mt-10 flex flex-col gap-3 border-t border-white/10 pt-6 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between">
           <div>© 2026 RobotIoKit. All rights reserved.</div>
+          <Link href="/privacy" className="transition hover:text-white">
+            Privacy Notice
+          </Link>
           <div>Built for Robotics Engineers & Enthusiasts</div>
         </div>
       </div>

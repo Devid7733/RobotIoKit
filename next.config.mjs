@@ -2,6 +2,7 @@
 
 const securityHeaders = [
   { key: "X-DNS-Prefetch-Control", value: "on" },
+  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
   { key: "X-Frame-Options", value: "SAMEORIGIN" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -9,16 +10,15 @@ const securityHeaders = [
 ];
 
 const nextConfig = {
-  //cacheComponents: true,
+  poweredByHeader: false,
   images: {
     remotePatterns: [
+      // Product/robot-kit imageUrl values are admin-entered and reference a mix of
+      // hosts (Vercel Blob, Unsplash, external supplier CDNs from seed data), so a
+      // wildcard is used here rather than enumerating every possible source.
       {
         protocol: "https",
-        hostname: "images.unsplash.com"
-      },
-      {
-        protocol: "https",
-        hostname: "*.public.blob.vercel-storage.com"
+        hostname: "**"
       }
     ]
   },
