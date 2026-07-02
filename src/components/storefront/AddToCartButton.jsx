@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useCart } from "@/components/storefront/CartProvider";
 
 export default function AddToCartButton({
@@ -11,12 +13,20 @@ export default function AddToCartButton({
   disabledLabel = "Out of Stock"
 }) {
   const { addItem } = useCart();
+  const { status } = useSession();
+  const router = useRouter();
+  const pathname = usePathname();
   const [added, setAdded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   async function handleAdd() {
-    if (disabled) {
+    if (disabled || status === "loading") {
+      return;
+    }
+
+    if (status === "unauthenticated") {
+      router.push(`/login?callbackUrl=${encodeURIComponent(pathname || "/")}`);
       return;
     }
 

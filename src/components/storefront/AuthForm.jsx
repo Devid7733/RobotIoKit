@@ -6,7 +6,14 @@ import { getSession, signIn } from "next-auth/react";
 import { useState } from "react";
 import { useCart } from "@/components/storefront/CartProvider";
 
-export default function AuthForm({ mode }) {
+function sanitizeCallbackUrl(value) {
+  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) {
+    return "";
+  }
+  return value;
+}
+
+export default function AuthForm({ mode, callbackUrl = "" }) {
   const router = useRouter();
   const { sessionId } = useCart();
   const isRegister = mode === "register";
@@ -67,7 +74,8 @@ export default function AuthForm({ mode }) {
       }
 
       const session = await getSession();
-      const nextPath = session?.user?.role === "ADMIN" ? "/admin" : "/";
+      const safeCallbackUrl = sanitizeCallbackUrl(callbackUrl);
+      const nextPath = session?.user?.role === "ADMIN" ? "/admin" : safeCallbackUrl || "/";
 
       router.push(nextPath);
       router.refresh();
