@@ -34,14 +34,14 @@ export default function CheckoutForm({ initialProfile }) {
     address: initialProfile?.address || "",
     note: ""
   });
-  const [fulfillmentMethod, setFulfillmentMethod] = useState("delivery");
-  const [paymentMethod, setPaymentMethod] = useState("cod");
+  const [fulfillmentMethod, setFulfillmentMethod] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
   const deliveryFee = useMemo(
-    () => (fulfillmentMethod === "pickup" ? 0 : getDeliveryFee(form.province)),
+    () => (fulfillmentMethod === "delivery" ? getDeliveryFee(form.province) : 0),
     [form.province, fulfillmentMethod]
   );
   const total = subtotal + deliveryFee;
@@ -59,6 +59,8 @@ export default function CheckoutForm({ initialProfile }) {
     if (!form.fullName.trim()) errors.fullName = "Full name is required.";
     if (!form.phone.trim()) errors.phone = "Phone number is required.";
     if (!form.address.trim()) errors.address = "Delivery address is required.";
+    if (!fulfillmentMethod) errors.fulfillmentMethod = "Please select a fulfillment method.";
+    if (!paymentMethod) errors.paymentMethod = "Please select a payment method.";
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   }
@@ -215,7 +217,10 @@ export default function CheckoutForm({ initialProfile }) {
               <div className="mt-5 grid gap-4 md:grid-cols-2">
                 <button
                   type="button"
-                  onClick={() => setFulfillmentMethod("delivery")}
+                  onClick={() => {
+                    setFulfillmentMethod("delivery");
+                    setFieldErrors((current) => ({ ...current, fulfillmentMethod: "" }));
+                  }}
                   className={`rounded-[20px] border p-5 text-left transition ${
                     fulfillmentMethod === "delivery" ? "border-brand-blue bg-brand-mist ring-2 ring-brand-blue/20" : "border-slate-200 bg-white"
                   }`}
@@ -233,7 +238,10 @@ export default function CheckoutForm({ initialProfile }) {
 
                 <button
                   type="button"
-                  onClick={() => setFulfillmentMethod("pickup")}
+                  onClick={() => {
+                    setFulfillmentMethod("pickup");
+                    setFieldErrors((current) => ({ ...current, fulfillmentMethod: "" }));
+                  }}
                   className={`rounded-[20px] border p-5 text-left transition ${
                     fulfillmentMethod === "pickup" ? "border-brand-blue bg-brand-mist ring-2 ring-brand-blue/20" : "border-slate-200 bg-white"
                   }`}
@@ -249,6 +257,9 @@ export default function CheckoutForm({ initialProfile }) {
                   </div>
                 </button>
               </div>
+              {fieldErrors.fulfillmentMethod && (
+                <p className="mt-2 text-xs text-red-500">{fieldErrors.fulfillmentMethod}</p>
+              )}
             </div>
 
             <div className="section-card">
@@ -256,7 +267,10 @@ export default function CheckoutForm({ initialProfile }) {
               <div className="mt-5 grid gap-4 md:grid-cols-2">
                 <button
                   type="button"
-                  onClick={() => setPaymentMethod("cod")}
+                  onClick={() => {
+                    setPaymentMethod("cod");
+                    setFieldErrors((current) => ({ ...current, paymentMethod: "" }));
+                  }}
                   className={`rounded-[20px] border p-5 text-left transition ${
                     paymentMethod === "cod" ? "border-brand-orange bg-orange-50 ring-2 ring-brand-orange/20" : "border-slate-200 bg-white"
                   }`}
@@ -274,7 +288,10 @@ export default function CheckoutForm({ initialProfile }) {
 
                 <button
                   type="button"
-                  onClick={() => setPaymentMethod("khqr")}
+                  onClick={() => {
+                    setPaymentMethod("khqr");
+                    setFieldErrors((current) => ({ ...current, paymentMethod: "" }));
+                  }}
                   className={`rounded-[20px] border p-5 text-left transition ${
                     paymentMethod === "khqr" ? "border-brand-orange bg-orange-50 ring-2 ring-brand-orange/20" : "border-slate-200 bg-white"
                   }`}
@@ -290,6 +307,9 @@ export default function CheckoutForm({ initialProfile }) {
                   </div>
                 </button>
               </div>
+              {fieldErrors.paymentMethod && (
+                <p className="mt-2 text-xs text-red-500">{fieldErrors.paymentMethod}</p>
+              )}
             </div>
 
             <div>
@@ -352,8 +372,8 @@ export default function CheckoutForm({ initialProfile }) {
         </button>
         {submitError ? <p className="mt-4 text-sm text-red-500">{submitError}</p> : null}
         <p className="mt-4 text-xs leading-6 text-slate-500">
-          Fulfillment: {fulfillmentMethod === "delivery" ? "Delivery" : "Store Pickup"} - Payment:{" "}
-          {paymentMethod === "khqr" ? "KHQR" : "Cash on Delivery"}
+          Fulfillment: {fulfillmentMethod ? (fulfillmentMethod === "delivery" ? "Delivery" : "Store Pickup") : "Not selected"} - Payment:{" "}
+          {paymentMethod ? (paymentMethod === "khqr" ? "KHQR" : "Cash on Delivery") : "Not selected"}
         </p>
       </aside>
     </div>

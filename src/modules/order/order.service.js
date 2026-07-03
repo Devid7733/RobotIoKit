@@ -407,9 +407,9 @@ export async function createOrderFromCart({ sessionUser, body, cart }) {
     }
   }
 
-  const fulfillmentMethod = body.fulfillmentMethod === "pickup" ? "pickup" : "delivery";
+  const fulfillmentMethod = body.fulfillmentMethod;
   const deliveryFee = fulfillmentMethod === "pickup" ? 0 : getDeliveryFee(body.province || "");
-  const paymentMethod = body.paymentMethod || "KHQR";
+  const paymentMethod = body.paymentMethod;
   const paymentReference = paymentMethod === "KHQR" ? null : body.paymentReference || null;
   const paymentExpiresAt = paymentMethod === "KHQR" ? getKhqrPaymentExpiresAt() : null;
 

@@ -410,11 +410,8 @@ export async function createCheckoutOrder(data) {
       where: { cartId: cart.id }
     });
 
-    return tx.order.findUnique({
-      where: { id: order.id },
-      include: orderInclude
-    });
-  });
+    return order;
+  }, { timeout: 15000, maxWait: 5000 });
 }
 
 export async function updateOrderDetails(orderId, data, tx) {
@@ -511,5 +508,5 @@ export async function createOrderTimelineEntries(orderId, entries, tx) {
 }
 
 export async function runOrderTransaction(callback) {
-  return prisma.$transaction((tx) => callback(tx));
+  return prisma.$transaction((tx) => callback(tx), { timeout: 15000, maxWait: 5000 });
 }
