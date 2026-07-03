@@ -36,7 +36,7 @@ export default function Footer() {
       <div className="storefront-container py-14">
         <div className="grid gap-10 lg:grid-cols-[1.2fr,0.9fr,0.9fr,1.1fr]">
           <div>
-            <div className="font-display text-[2rem] font-bold tracking-tight text-white">
+            <div className="font-display text-2xl font-bold tracking-tight text-white sm:text-[2rem]">
               Robot<span className="text-brand-orange">Io</span>Kit
             </div>
             <p className="mt-4 max-w-sm text-sm leading-7 text-slate-300">

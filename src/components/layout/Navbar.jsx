@@ -9,7 +9,7 @@ import { useCart } from "@/components/storefront/CartProvider";
 
 function Logo() {
   return (
-    <Link href="/" className="font-display text-[2rem] font-bold tracking-tight text-white">
+    <Link href="/" className="font-display text-2xl font-bold tracking-tight text-white sm:text-[2rem]">
       Robot<span className="text-brand-orange">Io</span>Kit
     </Link>
   );

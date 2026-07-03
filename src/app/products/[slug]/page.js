@@ -190,7 +190,7 @@ export default async function ProductDetailPage({ params }) {
             <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight text-slate-900">
               {product.name}
             </h1>
-            <div className="mt-4 text-5xl font-bold tracking-tight text-brand-blue">
+            <div className="mt-4 text-4xl font-bold tracking-tight text-brand-blue sm:text-5xl">
               ${product.price.toFixed(2)}
             </div>
 

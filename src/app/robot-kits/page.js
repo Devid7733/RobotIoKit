@@ -148,7 +148,7 @@ export default async function RobotKitsPage({ searchParams }) {
         <section className="mt-7 rounded-[26px] bg-[linear-gradient(90deg,#2563eb_0%,#4338ca_55%,#4f46e5_100%)] px-6 py-6 text-white shadow-[0_22px_44px_rgba(37,99,235,0.2)]">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-[1.75rem] font-semibold tracking-tight">
+              <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
                 All kits include assembly instructions & components
               </h2>
               <p className="mt-2 text-sm text-blue-100 sm:text-base">

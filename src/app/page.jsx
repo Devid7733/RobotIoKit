@@ -164,7 +164,7 @@ export default async function HomePage({ searchParams }) {
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
               In Stock &amp; Ready to Ship
             </div>
-            <h1 className="mt-7 max-w-xl font-display text-5xl font-semibold leading-[1.02] tracking-tight sm:text-6xl">
+            <h1 className="mt-7 max-w-xl font-display text-4xl font-semibold leading-[1.02] tracking-tight sm:text-5xl lg:text-6xl">
               Build the Future with <span className="text-brand-orange">RobotIoKit</span>
             </h1>
             <p className="mt-5 max-w-xl text-base leading-8 text-slate-200 sm:text-lg">

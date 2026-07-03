@@ -30,7 +30,7 @@ export default function AdminSidebar() {
   return (
     <div className="flex h-full flex-col border-r border-white/5 bg-[#131c2d]">
       <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
-        <Link href="/" className="font-display text-[2rem] font-bold tracking-tight text-white">
+        <Link href="/" className="font-display text-2xl font-bold tracking-tight text-white sm:text-[2rem]">
           Robot<span className="text-brand-orange">Io</span>Kit
         </Link>
         <Link href="/" className="text-lg text-slate-400 transition hover:text-white">

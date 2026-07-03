@@ -18,7 +18,7 @@ export default function CartPageClient() {
   return (
     <div className="grid gap-8 xl:grid-cols-[1fr,360px]">
       <section className="section-card">
-        <h1 className="page-title mt-0 text-[2.5rem] sm:text-[3rem]">Your shopping cart</h1>
+        <h1 className="page-title mt-0">Your shopping cart</h1>
         <p className="mt-3 text-sm leading-7 text-slate-500 sm:text-base">
           Shared cart state is now persisted locally and used across product detail, cart, and checkout.
         </p>

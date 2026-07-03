@@ -119,7 +119,7 @@ export default async function RobotKitDetailPage({ params }) {
               {kit.name}
             </h1>
 
-            <div className="mt-4 text-5xl font-bold tracking-tight text-brand-blue">
+            <div className="mt-4 text-4xl font-bold tracking-tight text-brand-blue sm:text-5xl">
               ${kit.price.toFixed(2)}
             </div>
 

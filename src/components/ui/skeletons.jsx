@@ -34,7 +34,7 @@ export function ProductGridSkeleton({ count = 4 }) {
 export function KitCardSkeleton() {
   return (
     <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_16px_36px_rgba(15,23,42,0.06)]">
-      <div className="h-80 animate-pulse bg-slate-200" />
+      <div className="h-64 animate-pulse bg-slate-200" />
       <div className="space-y-4 p-5">
         <Pulse className="h-7 w-3/4" />
         <div className="flex items-center gap-3">
