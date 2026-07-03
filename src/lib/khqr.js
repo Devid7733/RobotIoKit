@@ -7,7 +7,7 @@ function requireEnv(name) {
   const value = process.env[name];
 
   if (!value) {
-    throw new Error(`${name} is required for KHQR payments.`);
+    throw createKhqrError(`${name} is required for KHQR payments.`, 500);
   }
 
   return value;
