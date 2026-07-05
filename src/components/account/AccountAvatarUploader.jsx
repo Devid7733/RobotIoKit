@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 const allowedAvatarTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const maxAvatarSize = 2 * 1024 * 1024;
@@ -23,8 +24,6 @@ export default function AccountAvatarUploader({ user }) {
   const [previewUrl, setPreviewUrl] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
 
   const displayedAvatar = previewUrl || avatarUrl;
 
@@ -43,7 +42,6 @@ export default function AccountAvatarUploader({ user }) {
 
     setPreviewUrl("");
     setSelectedFile(null);
-    setError("");
 
     if (inputRef.current) {
       inputRef.current.value = "";
@@ -52,21 +50,19 @@ export default function AccountAvatarUploader({ user }) {
 
   function selectAvatar(event) {
     const file = event.target.files?.[0];
-    setError("");
-    setMessage("");
 
     if (!file) {
       return;
     }
 
     if (!allowedAvatarTypes.has(file.type)) {
-      setError("Choose a JPG, PNG, or WEBP image.");
+      toast.error("Choose a JPG, PNG, or WEBP image.");
       event.target.value = "";
       return;
     }
 
     if (file.size >= maxAvatarSize) {
-      setError("Avatar image must be smaller than 2MB.");
+      toast.error("Avatar image must be smaller than 2MB.");
       event.target.value = "";
       return;
     }
@@ -85,8 +81,6 @@ export default function AccountAvatarUploader({ user }) {
     }
 
     setIsUploading(true);
-    setError("");
-    setMessage("");
 
     try {
       const formData = new FormData();
@@ -105,10 +99,10 @@ export default function AccountAvatarUploader({ user }) {
 
       setAvatarUrl(result.data.avatarUrl || "");
       resetSelection();
-      setMessage("Profile photo updated.");
+      toast.success("Profile photo updated.");
       router.refresh();
     } catch (uploadError) {
-      setError(uploadError instanceof Error ? uploadError.message : "Unable to upload avatar.");
+      toast.error(uploadError instanceof Error ? uploadError.message : "Unable to upload avatar.");
     } finally {
       setIsUploading(false);
     }
@@ -157,8 +151,6 @@ export default function AccountAvatarUploader({ user }) {
           </button>
         </div>
       ) : null}
-      {error ? <p className="max-w-48 text-xs leading-5 text-red-500">{error}</p> : null}
-      {message ? <p className="max-w-48 text-xs leading-5 text-emerald-600">{message}</p> : null}
     </div>
   );
 }

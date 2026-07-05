@@ -3,6 +3,7 @@
 import Icon from "@/components/common/Icon";
 import MediaPicker from "@/components/admin/MediaPicker";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 const VOLTAGE_OPTIONS = ["3.3V", "3.7V", "4.8V", "5V", "6V", "7.4V", "9V", "12V", "24V"];
 
@@ -57,8 +58,8 @@ export default function AdminProductManager({ initialProducts, categories }) {
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [creatingCategory, setCreatingCategory] = useState(false);
   const [deletingCategoryId, setDeletingCategoryId] = useState("");
+  const [deletingProductId, setDeletingProductId] = useState("");
   const [inlineCategoryName, setInlineCategoryName] = useState("");
-  const [error, setError] = useState("");
 
   const filteredProducts = useMemo(() => {
     const search = query.trim().toLowerCase();
@@ -89,7 +90,7 @@ export default function AdminProductManager({ initialProducts, categories }) {
       setCategoryOptions(result.data || []);
       return result.data || [];
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Unable to load categories.");
+      toast.error(loadError instanceof Error ? loadError.message : "Unable to load categories.");
       return categoryOptions;
     } finally {
       setLoadingCategories(false);
@@ -103,7 +104,6 @@ export default function AdminProductManager({ initialProducts, categories }) {
       ...emptyForm,
       categoryId: latestCategories[0]?.id || ""
     });
-    setError("");
     setOpen(true);
   }
 
@@ -123,7 +123,6 @@ export default function AdminProductManager({ initialProducts, categories }) {
       description: product.description || "",
       featured: Boolean(product.featured)
     });
-    setError("");
     setOpen(true);
   }
 
@@ -132,7 +131,6 @@ export default function AdminProductManager({ initialProducts, categories }) {
 
     try {
       setSubmitting(true);
-      setError("");
 
       const payload = {
         ...form,
@@ -159,8 +157,9 @@ export default function AdminProductManager({ initialProducts, categories }) {
           : [result.data, ...current]
       );
       setOpen(false);
+      toast.success(form.id ? "Product updated." : "Product created.");
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Unable to save product.");
+      toast.error(submitError instanceof Error ? submitError.message : "Unable to save product.");
     } finally {
       setSubmitting(false);
     }
@@ -168,13 +167,12 @@ export default function AdminProductManager({ initialProducts, categories }) {
 
   async function handleInlineCategoryCreate() {
     if (!inlineCategoryName.trim()) {
-      setError("Category name is required.");
+      toast.error("Category name is required.");
       return;
     }
 
     try {
       setCreatingCategory(true);
-      setError("");
 
       const response = await fetch("/api/categories", {
         method: "POST",
@@ -194,8 +192,9 @@ export default function AdminProductManager({ initialProducts, categories }) {
       setCategoryOptions((current) => [...current, result.data].sort((a, b) => a.name.localeCompare(b.name)));
       setForm((current) => ({ ...current, categoryId: result.data.id }));
       setInlineCategoryName("");
+      toast.success("Category created.");
     } catch (createError) {
-      setError(createError instanceof Error ? createError.message : "Unable to create category.");
+      toast.error(createError instanceof Error ? createError.message : "Unable to create category.");
     } finally {
       setCreatingCategory(false);
     }
@@ -203,14 +202,14 @@ export default function AdminProductManager({ initialProducts, categories }) {
 
   async function handleSelectedCategoryDelete() {
     if (!form.categoryId) {
-      setError("Select a category to delete.");
+      toast.error("Select a category to delete.");
       return;
     }
 
     const selectedCategory = categoryOptions.find((category) => category.id === form.categoryId);
 
     if (!selectedCategory) {
-      setError("Selected category not found.");
+      toast.error("Selected category not found.");
       return;
     }
 
@@ -222,7 +221,6 @@ export default function AdminProductManager({ initialProducts, categories }) {
 
     try {
       setDeletingCategoryId(selectedCategory.id);
-      setError("");
 
       const response = await fetch(`/api/categories/${selectedCategory.id}`, {
         method: "DELETE"
@@ -239,8 +237,9 @@ export default function AdminProductManager({ initialProducts, categories }) {
         ...current,
         categoryId: nextCategories[0]?.id || ""
       }));
+      toast.success("Category deleted.");
     } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : "Unable to delete category.");
+      toast.error(deleteError instanceof Error ? deleteError.message : "Unable to delete category.");
     } finally {
       setDeletingCategoryId("");
     }
@@ -254,6 +253,8 @@ export default function AdminProductManager({ initialProducts, categories }) {
     }
 
     try {
+      setDeletingProductId(productId);
+
       const response = await fetch(`/api/products/${productId}`, {
         method: "DELETE"
       });
@@ -264,8 +265,11 @@ export default function AdminProductManager({ initialProducts, categories }) {
       }
 
       setProducts((current) => current.filter((product) => product.id !== productId));
+      toast.success("Product deleted.");
     } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : "Unable to delete product.");
+      toast.error(deleteError instanceof Error ? deleteError.message : "Unable to delete product.");
+    } finally {
+      setDeletingProductId("");
     }
   }
 
@@ -290,8 +294,6 @@ export default function AdminProductManager({ initialProducts, categories }) {
           type="text"
         />
       </div>
-
-      {error ? <p className="mt-4 text-sm text-red-500">{error}</p> : null}
 
       <div className="mt-6 overflow-hidden rounded-[24px] border border-slate-200">
         <table className="min-w-full text-left">
@@ -334,8 +336,13 @@ export default function AdminProductManager({ initialProducts, categories }) {
                     <button type="button" onClick={() => openEditModal(product)} className="text-sm font-medium text-brand-blue">
                       Edit
                     </button>
-                    <button type="button" onClick={() => handleDelete(product.id)} className="text-sm font-medium text-red-500">
-                      Delete
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(product.id)}
+                      disabled={deletingProductId === product.id}
+                      className="text-sm font-medium text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {deletingProductId === product.id ? "Deleting..." : "Delete"}
                     </button>
                   </div>
                 </td>

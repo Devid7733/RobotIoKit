@@ -1,12 +1,16 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { useCart } from "@/components/storefront/CartProvider";
 
 export default function ProductPurchasePanel({ product }) {
   const { addItem } = useCart();
+  const { status } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
   const [isBuying, setIsBuying] = useState(false);
   const [quantity, setQuantity] = useState(1);
 
@@ -22,10 +26,22 @@ export default function ProductPurchasePanel({ product }) {
   };
 
   async function buyNow() {
+    if (status === "loading") {
+      return;
+    }
+
+    if (status === "unauthenticated") {
+      router.push(`/login?callbackUrl=${encodeURIComponent(pathname || "/")}`);
+      return;
+    }
+
     setIsBuying(true);
     try {
       await addItem(cartItem, quantity);
+      toast.success("Added to cart.");
       router.push("/cart");
+    } catch (addError) {
+      toast.error(addError instanceof Error ? addError.message : "Unable to add item.");
     } finally {
       setIsBuying(false);
     }
@@ -63,7 +79,8 @@ export default function ProductPurchasePanel({ product }) {
       <button
         type="button"
         onClick={buyNow}
-        className="button-primary mt-6 flex w-full items-center justify-center px-8 py-4 text-base"
+        disabled={isBuying}
+        className="button-primary mt-6 flex w-full items-center justify-center px-8 py-4 text-base disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isBuying ? "Adding..." : `Add to Cart - $${(product.price * quantity).toFixed(2)}`}
       </button>

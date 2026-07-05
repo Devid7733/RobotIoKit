@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useCart } from "@/components/storefront/CartProvider";
 
 const STORAGE_KEY = "robotiokitVerificationEmail";
@@ -22,8 +23,6 @@ export default function VerifyEmailForm({ initialEmail = "" }) {
   const { sessionId, refreshCart } = useCart();
   const [email, setEmail] = useState(initialEmail);
   const [otp, setOtp] = useState("");
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
@@ -71,10 +70,9 @@ export default function VerifyEmailForm({ initialEmail = "" }) {
 
   async function handleVerify(event) {
     event.preventDefault();
-    setError("");
 
     if (!email) {
-      setError("Please register again or return to the registration page.");
+      toast.error("Please register again or return to the registration page.");
       return;
     }
 
@@ -82,7 +80,7 @@ export default function VerifyEmailForm({ initialEmail = "" }) {
 
     try {
       const result = await submitJson("/api/auth/verify-email", { email, otp, guestSessionId: sessionId });
-      setMessage(result.message || "Email verified successfully.");
+      toast.success(result.message || "Email verified successfully.");
       setIsVerified(true);
       window.sessionStorage.removeItem(STORAGE_KEY);
       window.localStorage.removeItem(STORAGE_KEY);
@@ -90,17 +88,15 @@ export default function VerifyEmailForm({ initialEmail = "" }) {
       router.push("/");
       router.refresh();
     } catch (verifyError) {
-      setError(verifyError instanceof Error ? verifyError.message : "Unable to verify email.");
+      toast.error(verifyError instanceof Error ? verifyError.message : "Unable to verify email.");
     } finally {
       setIsVerifying(false);
     }
   }
 
   async function handleResend() {
-    setError("");
-
     if (!email) {
-      setError("Please register again or return to the registration page.");
+      toast.error("Please register again or return to the registration page.");
       return;
     }
 
@@ -108,11 +104,11 @@ export default function VerifyEmailForm({ initialEmail = "" }) {
 
     try {
       const result = await submitJson("/api/auth/resend-otp", { email });
-      setMessage(result.message || "A new verification code has been sent.");
+      toast.success(result.message || "A new verification code has been sent.");
       setOtp("");
       setIsVerified(Boolean(result.data?.alreadyVerified));
     } catch (resendError) {
-      setError(resendError instanceof Error ? resendError.message : "Unable to resend verification code.");
+      toast.error(resendError instanceof Error ? resendError.message : "Unable to resend verification code.");
     } finally {
       setIsResending(false);
     }
@@ -131,7 +127,6 @@ export default function VerifyEmailForm({ initialEmail = "" }) {
           Verify your email
         </h1>
         <p className="mt-3 text-sm leading-7 text-slate-500">{helperText}</p>
-        {message ? <p className="mt-2 text-sm font-medium text-emerald-600">{message}</p> : null}
       </div>
 
       <form onSubmit={handleVerify} className="mt-8 space-y-4">
@@ -146,8 +141,6 @@ export default function VerifyEmailForm({ initialEmail = "" }) {
             type="text"
           />
         </label>
-
-        {error ? <p className="text-sm text-red-500">{error}</p> : null}
 
         {isVerified ? (
           <Link href="/login" className="button-blue w-full">

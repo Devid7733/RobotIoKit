@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { CAMBODIA_PROVINCES } from "@/lib/provinces";
 
 const editableOrderStatuses = ["PREPARING", "SHIPPED", "COMPLETED", "CANCELLED"];
 
@@ -57,7 +59,6 @@ function basePayload(order) {
     customerName: order.customerName || "",
     customerPhone: order.customerPhone || "",
     province: order.province || "",
-    city: order.city || "",
     address: order.address || "",
     note: order.note || ""
   };
@@ -68,8 +69,7 @@ export default function AdminOrderDetailClient({ orderId }) {
   const [form, setForm] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -77,7 +77,7 @@ export default function AdminOrderDetailClient({ orderId }) {
     async function loadOrder() {
       try {
         setLoading(true);
-        setError("");
+        setLoadError("");
 
         const response = await fetch(`/api/orders/${orderId}`, { cache: "no-store" });
         const result = await response.json();
@@ -90,9 +90,9 @@ export default function AdminOrderDetailClient({ orderId }) {
           setOrder(result.data);
           setForm(basePayload(result.data));
         }
-      } catch (loadError) {
+      } catch (err) {
         if (isMounted) {
-          setError(loadError instanceof Error ? loadError.message : "Unable to load order.");
+          setLoadError(err instanceof Error ? err.message : "Unable to load order.");
         }
       } finally {
         if (isMounted) {
@@ -111,8 +111,6 @@ export default function AdminOrderDetailClient({ orderId }) {
   async function save(payload) {
     try {
       setSaving(true);
-      setError("");
-      setSuccess("");
 
       const response = await fetch(`/api/orders/${orderId}`, {
         method: "PATCH",
@@ -127,9 +125,9 @@ export default function AdminOrderDetailClient({ orderId }) {
 
       setOrder(result.data);
       setForm(basePayload(result.data));
-      setSuccess("Order updated.");
+      toast.success("Order updated.");
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : "Unable to update order.");
+      toast.error(saveError instanceof Error ? saveError.message : "Unable to update order.");
     } finally {
       setSaving(false);
     }
@@ -139,11 +137,11 @@ export default function AdminOrderDetailClient({ orderId }) {
     return <div className="h-96 animate-pulse rounded-3xl border border-slate-200/80 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.06)]" />;
   }
 
-  if (error && !order) {
+  if (loadError && !order) {
     return (
       <div className="surface-card">
         <div className="text-lg font-semibold text-red-500">Failed to load order</div>
-        <p className="mt-2 text-sm text-slate-500">{error}</p>
+        <p className="mt-2 text-sm text-slate-500">{loadError}</p>
       </div>
     );
   }
@@ -166,21 +164,46 @@ export default function AdminOrderDetailClient({ orderId }) {
           <div className="flex flex-wrap gap-3">
             {canReviewPayment ? (
               <>
-                <button type="button" onClick={() => save(quickActionPayload("approvePayment", order))} className="button-success px-4 py-2.5">
+                <button
+                  type="button"
+                  onClick={() => save(quickActionPayload("approvePayment", order))}
+                  disabled={saving}
+                  className="button-success px-4 py-2.5 disabled:cursor-not-allowed disabled:opacity-60"
+                >
                   Approve Payment
                 </button>
-                <button type="button" onClick={() => save(quickActionPayload("rejectPayment", order))} className="rounded-2xl bg-rose-500 px-4 py-2.5 text-sm font-semibold text-white">
+                <button
+                  type="button"
+                  onClick={() => save(quickActionPayload("rejectPayment", order))}
+                  disabled={saving}
+                  className="rounded-2xl bg-rose-500 px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                >
                   Reject Payment
                 </button>
               </>
             ) : null}
-            <button type="button" onClick={() => save(quickActionPayload("shipped", order))} className="rounded-2xl bg-brand-blue px-4 py-2.5 text-sm font-semibold text-white">
+            <button
+              type="button"
+              onClick={() => save(quickActionPayload("shipped", order))}
+              disabled={saving}
+              className="rounded-2xl bg-brand-blue px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+            >
               Mark Shipped
             </button>
-            <button type="button" onClick={() => save(quickActionPayload("completed", order))} className="rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white">
+            <button
+              type="button"
+              onClick={() => save(quickActionPayload("completed", order))}
+              disabled={saving}
+              className="rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+            >
               Mark Completed
             </button>
-            <button type="button" onClick={() => save(quickActionPayload("cancelled", order))} className="rounded-2xl bg-rose-500 px-4 py-2.5 text-sm font-semibold text-white">
+            <button
+              type="button"
+              onClick={() => save(quickActionPayload("cancelled", order))}
+              disabled={saving}
+              className="rounded-2xl bg-rose-500 px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+            >
               Cancel Order
             </button>
           </div>
@@ -267,24 +290,21 @@ export default function AdminOrderDetailClient({ orderId }) {
                 />
               </label>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <label className="grid gap-2 text-sm font-medium text-slate-700">
-                  Province
-                  <input
-                    value={form.province}
-                    onChange={(event) => setForm((current) => ({ ...current, province: event.target.value }))}
-                    className="input-base"
-                  />
-                </label>
-                <label className="grid gap-2 text-sm font-medium text-slate-700">
-                  City
-                  <input
-                    value={form.city}
-                    onChange={(event) => setForm((current) => ({ ...current, city: event.target.value }))}
-                    className="input-base"
-                  />
-                </label>
-              </div>
+              <label className="grid gap-2 text-sm font-medium text-slate-700">
+                Province
+                <select
+                  value={form.province}
+                  onChange={(event) => setForm((current) => ({ ...current, province: event.target.value }))}
+                  className="input-base"
+                >
+                  <option value="">Select province</option>
+                  {CAMBODIA_PROVINCES.map((province) => (
+                    <option key={province} value={province}>
+                      {province}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
               <label className="grid gap-2 text-sm font-medium text-slate-700">
                 Address
@@ -303,9 +323,6 @@ export default function AdminOrderDetailClient({ orderId }) {
                   className="input-base min-h-28"
                 />
               </label>
-
-              {error ? <p className="text-sm text-red-500">{error}</p> : null}
-              {success ? <p className="text-sm text-emerald-600">{success}</p> : null}
 
               <div className="flex items-center justify-end gap-3">
                 <Link href="/admin/orders" className="button-secondary px-5 py-2.5">

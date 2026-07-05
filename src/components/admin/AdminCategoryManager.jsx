@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import Icon from "@/components/common/Icon";
 
 const emptyForm = {
@@ -24,7 +25,7 @@ export default function AdminCategoryManager({ initialCategories }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [deletingCategoryId, setDeletingCategoryId] = useState("");
 
   const filteredCategories = useMemo(() => {
     const search = query.trim().toLowerCase();
@@ -41,7 +42,6 @@ export default function AdminCategoryManager({ initialCategories }) {
 
   function openCreateModal() {
     setForm(emptyForm);
-    setError("");
     setOpen(true);
   }
 
@@ -52,7 +52,6 @@ export default function AdminCategoryManager({ initialCategories }) {
       slug: category.slug || "",
       description: category.description || ""
     });
-    setError("");
     setOpen(true);
   }
 
@@ -61,7 +60,6 @@ export default function AdminCategoryManager({ initialCategories }) {
 
     try {
       setSubmitting(true);
-      setError("");
 
       const payload = {
         ...form,
@@ -87,8 +85,9 @@ export default function AdminCategoryManager({ initialCategories }) {
           : [...current, result.data].sort((a, b) => a.name.localeCompare(b.name))
       );
       setOpen(false);
+      toast.success(form.id ? "Category updated." : "Category created.");
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Unable to save category.");
+      toast.error(submitError instanceof Error ? submitError.message : "Unable to save category.");
     } finally {
       setSubmitting(false);
     }
@@ -102,6 +101,8 @@ export default function AdminCategoryManager({ initialCategories }) {
     }
 
     try {
+      setDeletingCategoryId(categoryId);
+
       const response = await fetch(`/api/categories/${categoryId}`, {
         method: "DELETE"
       });
@@ -112,8 +113,11 @@ export default function AdminCategoryManager({ initialCategories }) {
       }
 
       setCategories((current) => current.filter((category) => category.id !== categoryId));
+      toast.success("Category deleted.");
     } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : "Unable to delete category.");
+      toast.error(deleteError instanceof Error ? deleteError.message : "Unable to delete category.");
+    } finally {
+      setDeletingCategoryId("");
     }
   }
 
@@ -145,8 +149,6 @@ export default function AdminCategoryManager({ initialCategories }) {
         </div>
       </div>
 
-      {error ? <p className="mt-4 text-sm text-red-500">{error}</p> : null}
-
       <div className="mt-6 overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_10px_28px_rgba(15,23,42,0.04)]">
         <table className="min-w-full text-left">
           <thead className="border-b border-slate-200 bg-white text-sm uppercase tracking-[0.04em] text-slate-500">
@@ -174,7 +176,13 @@ export default function AdminCategoryManager({ initialCategories }) {
                     <button type="button" onClick={() => openEditModal(category)} className="text-brand-blue transition hover:opacity-80" aria-label={`Edit ${category.name}`}>
                       <Icon name="wrench" className="h-5 w-5" />
                     </button>
-                    <button type="button" onClick={() => handleDelete(category.id)} className="text-rose-500 transition hover:opacity-80" aria-label={`Delete ${category.name}`}>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(category.id)}
+                      disabled={deletingCategoryId === category.id}
+                      className="text-rose-500 transition hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
+                      aria-label={`Delete ${category.name}`}
+                    >
                       <Icon name="trash" className="h-5 w-5" />
                     </button>
                   </div>

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-
-const provinces = ["Phnom Penh", "Kandal", "Siem Reap", "Battambang", "Kampong Cham", "Kampot", "Preah Sihanouk"];
+import { toast } from "sonner";
+import { CAMBODIA_PROVINCES } from "@/lib/provinces";
 
 export default function AccountProfileForm({ user }) {
   function getInitialForm(profile) {
@@ -10,7 +10,6 @@ export default function AccountProfileForm({ user }) {
       name: profile.name || "",
       phone: profile.phone || "",
       province: profile.province || "Phnom Penh",
-      city: profile.city || "",
       address: profile.address || ""
     };
   }
@@ -20,8 +19,6 @@ export default function AccountProfileForm({ user }) {
   const [isEditing, setIsEditing] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
 
   const isProfileIncomplete = !savedForm.name || !savedForm.phone || !savedForm.address;
 
@@ -36,8 +33,6 @@ export default function AccountProfileForm({ user }) {
   function cancelEditing() {
     setForm(savedForm);
     setFieldErrors({});
-    setError("");
-    setMessage("");
     setIsEditing(false);
   }
 
@@ -65,15 +60,12 @@ export default function AccountProfileForm({ user }) {
 
     if (!isEditing) {
       setIsEditing(true);
-      setMessage("");
       return;
     }
 
     if (!validateProfile()) return;
 
     setIsSaving(true);
-    setMessage("");
-    setError("");
     setFieldErrors({});
 
     try {
@@ -98,15 +90,14 @@ export default function AccountProfileForm({ user }) {
         name: result.data.name || "",
         phone: result.data.phone || "",
         province: result.data.province || "Phnom Penh",
-        city: result.data.city || "",
         address: result.data.address || ""
       };
       setForm(nextForm);
       setSavedForm(nextForm);
       setIsEditing(false);
-      setMessage("Profile updated.");
+      toast.success("Profile updated.");
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Unable to update profile.");
+      toast.error(submitError instanceof Error ? submitError.message : "Unable to update profile.");
     } finally {
       setIsSaving(false);
     }
@@ -167,43 +158,25 @@ export default function AccountProfileForm({ user }) {
             {fieldErrors.phone ? <p className="mt-1 text-xs text-red-500">{fieldErrors.phone}</p> : null}
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-700" htmlFor="account-province">
-              Province
-            </label>
-            <select
-              id="account-province"
-              className={fieldClass("province")}
-              name="province"
-              value={form.province}
-              onChange={updateField}
-              disabled={!isEditing || isSaving}
-            >
-              {provinces.map((province) => (
-                <option key={province} value={province}>
-                  {province}
-                </option>
-              ))}
-            </select>
-            {fieldErrors.province ? <p className="mt-1 text-xs text-red-500">{fieldErrors.province}</p> : null}
-          </div>
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-700" htmlFor="account-city">
-              City / District
-            </label>
-            <input
-              id="account-city"
-              className={fieldClass("city")}
-              name="city"
-              value={form.city}
-              onChange={updateField}
-              placeholder="Add city or district"
-              type="text"
-              disabled={!isEditing || isSaving}
-            />
-            {fieldErrors.city ? <p className="mt-1 text-xs text-red-500">{fieldErrors.city}</p> : null}
-          </div>
+        <div>
+          <label className="mb-2 block text-sm font-semibold text-slate-700" htmlFor="account-province">
+            Province
+          </label>
+          <select
+            id="account-province"
+            className={fieldClass("province")}
+            name="province"
+            value={form.province}
+            onChange={updateField}
+            disabled={!isEditing || isSaving}
+          >
+            {CAMBODIA_PROVINCES.map((province) => (
+              <option key={province} value={province}>
+                {province}
+              </option>
+            ))}
+          </select>
+          {fieldErrors.province ? <p className="mt-1 text-xs text-red-500">{fieldErrors.province}</p> : null}
         </div>
         <div>
           <label className="mb-2 block text-sm font-semibold text-slate-700" htmlFor="account-address">
@@ -220,8 +193,6 @@ export default function AccountProfileForm({ user }) {
           />
           {fieldErrors.address ? <p className="mt-1 text-xs text-red-500">{fieldErrors.address}</p> : null}
         </div>
-        {error ? <p className="text-sm text-red-500">{error}</p> : null}
-        {message ? <p className="text-sm text-emerald-600">{message}</p> : null}
         <div className="flex flex-col gap-3 sm:flex-row">
           <button type="submit" disabled={isSaving} className="button-blue w-full sm:w-auto">
             {isSaving ? "Saving..." : isEditing ? "Save Profile" : "Edit Profile"}

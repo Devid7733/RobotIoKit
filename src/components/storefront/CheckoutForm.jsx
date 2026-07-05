@@ -3,19 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import Icon from "@/components/common/Icon";
 import { useCart } from "@/components/storefront/CartProvider";
 import { getDeliveryFee } from "@/lib/deliveryFee";
-
-const provinces = [
-  "Phnom Penh",
-  "Kandal",
-  "Siem Reap",
-  "Battambang",
-  "Kampong Cham",
-  "Kampot",
-  "Preah Sihanouk"
-];
+import { CAMBODIA_PROVINCES } from "@/lib/provinces";
 
 function formatMoney(value) {
   return `$${Number(value || 0).toFixed(2)}`;
@@ -25,11 +17,22 @@ export default function CheckoutForm({ initialProfile }) {
   const { items, subtotal, refreshCart, isReady } = useCart();
   const router = useRouter();
   const checkoutKeyRef = useRef(null);
+  const fullNameRef = useRef(null);
+  const phoneRef = useRef(null);
+  const addressRef = useRef(null);
+  const fulfillmentRef = useRef(null);
+  const paymentRef = useRef(null);
+  const fieldRefs = {
+    fullName: fullNameRef,
+    phone: phoneRef,
+    address: addressRef,
+    fulfillmentMethod: fulfillmentRef,
+    paymentMethod: paymentRef
+  };
   const [form, setForm] = useState({
     fullName: initialProfile?.fullName || "",
     phone: initialProfile?.phone || "",
     email: initialProfile?.email || "",
-    city: initialProfile?.city || "",
     province: initialProfile?.province || "Phnom Penh",
     address: initialProfile?.address || "",
     note: ""
@@ -38,7 +41,6 @@ export default function CheckoutForm({ initialProfile }) {
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState("");
 
   const deliveryFee = useMemo(
     () => (fulfillmentMethod === "delivery" ? getDeliveryFee(form.province) : 0),
@@ -54,15 +56,19 @@ export default function CheckoutForm({ initialProfile }) {
     }
   }
 
+  const fieldOrder = ["fullName", "phone", "address", "fulfillmentMethod", "paymentMethod"];
+
   function validate() {
     const errors = {};
     if (!form.fullName.trim()) errors.fullName = "Full name is required.";
     if (!form.phone.trim()) errors.phone = "Phone number is required.";
-    if (!form.address.trim()) errors.address = "Delivery address is required.";
+    if (fulfillmentMethod === "delivery" && !form.address.trim()) {
+      errors.address = "Delivery address is required.";
+    }
     if (!fulfillmentMethod) errors.fulfillmentMethod = "Please select a fulfillment method.";
     if (!paymentMethod) errors.paymentMethod = "Please select a payment method.";
     setFieldErrors(errors);
-    return Object.keys(errors).length === 0;
+    return errors;
   }
 
   async function submitOrder(event) {
@@ -70,10 +76,18 @@ export default function CheckoutForm({ initialProfile }) {
       event.preventDefault();
     }
 
-    if (!validate()) return;
+    const errors = validate();
+    const firstErrorField = fieldOrder.find((field) => errors[field]);
+
+    if (firstErrorField) {
+      toast.error(errors[firstErrorField]);
+      const target = fieldRefs[firstErrorField]?.current;
+      target?.scrollIntoView({ behavior: "smooth", block: "center" });
+      target?.focus?.();
+      return;
+    }
 
     setIsSubmitting(true);
-    setSubmitError("");
 
     try {
       if (!checkoutKeyRef.current) {
@@ -109,7 +123,7 @@ export default function CheckoutForm({ initialProfile }) {
       }
     } catch (error) {
       checkoutKeyRef.current = null;
-      setSubmitError(error instanceof Error ? error.message : "Unable to place order.");
+      toast.error(error instanceof Error ? error.message : "Unable to place order.");
     } finally {
       setIsSubmitting(false);
     }
@@ -145,6 +159,7 @@ export default function CheckoutForm({ initialProfile }) {
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-700">Full Name</label>
                   <input
+                    ref={fullNameRef}
                     name="fullName"
                     value={form.fullName}
                     onChange={updateField}
@@ -159,6 +174,7 @@ export default function CheckoutForm({ initialProfile }) {
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-700">Phone Number</label>
                   <input
+                    ref={phoneRef}
                     name="phone"
                     value={form.phone}
                     onChange={updateField}
@@ -173,8 +189,11 @@ export default function CheckoutForm({ initialProfile }) {
               </div>
 
               <div className="mt-4">
-                <label className="mb-2 block text-sm font-semibold text-slate-700">Address</label>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
+                  Address {fulfillmentMethod === "pickup" ? "(optional for store pickup)" : ""}
+                </label>
                 <input
+                  ref={addressRef}
                   name="address"
                   value={form.address}
                   onChange={updateField}
@@ -187,32 +206,19 @@ export default function CheckoutForm({ initialProfile }) {
                 )}
               </div>
 
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">City / Province</label>
-                  <select name="province" value={form.province} onChange={updateField} className="input-base">
-                    {provinces.map((province) => (
-                      <option key={province} value={province}>
-                        {province}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">District / City</label>
-                  <input
-                    name="city"
-                    value={form.city}
-                    onChange={updateField}
-                    className="input-base"
-                    placeholder="District / city"
-                    type="text"
-                  />
-                </div>
+              <div className="mt-4">
+                <label className="mb-2 block text-sm font-semibold text-slate-700">Province</label>
+                <select name="province" value={form.province} onChange={updateField} className="input-base">
+                  {CAMBODIA_PROVINCES.map((province) => (
+                    <option key={province} value={province}>
+                      {province}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
-            <div className="section-card">
+            <div ref={fulfillmentRef} tabIndex={-1} className="section-card">
               <h2 className="heading-section text-2xl">Fulfillment Method</h2>
               <div className="mt-5 grid gap-4 md:grid-cols-2">
                 <button
@@ -262,7 +268,7 @@ export default function CheckoutForm({ initialProfile }) {
               )}
             </div>
 
-            <div className="section-card">
+            <div ref={paymentRef} tabIndex={-1} className="section-card">
               <h2 className="heading-section text-2xl">Payment Method</h2>
               <div className="mt-5 grid gap-4 md:grid-cols-2">
                 <button
@@ -370,7 +376,6 @@ export default function CheckoutForm({ initialProfile }) {
         >
           {isSubmitting ? "Placing order..." : "Place Order"}
         </button>
-        {submitError ? <p className="mt-4 text-sm text-red-500">{submitError}</p> : null}
         <p className="mt-4 text-xs leading-6 text-slate-500">
           Fulfillment: {fulfillmentMethod ? (fulfillmentMethod === "delivery" ? "Delivery" : "Store Pickup") : "Not selected"} - Payment:{" "}
           {paymentMethod ? (paymentMethod === "khqr" ? "KHQR" : "Cash on Delivery") : "Not selected"}

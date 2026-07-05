@@ -150,6 +150,16 @@ export default function Icon({ name, className = "h-5 w-5" }) {
         strokeWidth="1.8"
       />
     ),
+    eyeOff: (
+      <path
+        d="M3 3l18 18M10.6 10.6a2.5 2.5 0 003.5 3.5M9.4 5.5A10.8 10.8 0 0112 5c6.5 0 10 6 10 6a13.6 13.6 0 01-3.1 3.8M6.6 6.6C4.3 8.1 2 11 2 11s3.5 6 10 6c1.2 0 2.3-.2 3.3-.5"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    ),
     logout: (
       <path
         d="M10 17l-5-5 5-5m-5 5h12M13 4h4a2 2 0 012 2v12a2 2 0 01-2 2h-4"

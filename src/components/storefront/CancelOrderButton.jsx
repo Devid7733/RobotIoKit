@@ -2,12 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import Icon from "@/components/common/Icon";
 
 export default function CancelOrderButton({ orderId, compact = false }) {
   const router = useRouter();
   const [isCancelling, setIsCancelling] = useState(false);
-  const [error, setError] = useState("");
 
   async function cancelOrder() {
     if (isCancelling) {
@@ -22,7 +22,6 @@ export default function CancelOrderButton({ orderId, compact = false }) {
 
     try {
       setIsCancelling(true);
-      setError("");
 
       const response = await fetch(`/api/orders/${orderId}/cancel`, {
         method: "POST"
@@ -33,9 +32,10 @@ export default function CancelOrderButton({ orderId, compact = false }) {
         throw new Error(result.message || "Unable to cancel order.");
       }
 
+      toast.success("Order cancelled.");
       router.refresh();
     } catch (cancelError) {
-      setError(cancelError instanceof Error ? cancelError.message : "Unable to cancel order.");
+      toast.error(cancelError instanceof Error ? cancelError.message : "Unable to cancel order.");
     } finally {
       setIsCancelling(false);
     }
@@ -54,7 +54,6 @@ export default function CancelOrderButton({ orderId, compact = false }) {
         <Icon name="xCircle" className="h-4 w-4" />
         {isCancelling ? "Cancelling..." : "Cancel Order"}
       </button>
-      {error ? <p className="text-center text-xs text-red-500">{error}</p> : null}
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 const RESET_EMAIL_KEY = "robotiokitPasswordResetEmail";
 
@@ -10,13 +11,9 @@ export default function ForgotPasswordForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
 
   async function handleSubmit(event) {
     event.preventDefault();
-    setMessage("");
-    setError("");
     setIsSubmitting(true);
 
     try {
@@ -36,13 +33,13 @@ export default function ForgotPasswordForm() {
       const normalizedEmail = email.trim().toLowerCase();
       window.sessionStorage.setItem(RESET_EMAIL_KEY, normalizedEmail);
       window.localStorage.setItem(RESET_EMAIL_KEY, normalizedEmail);
-      setMessage(result.message);
+      toast.success(result.message || "Reset code sent.");
 
       window.setTimeout(() => {
         router.push(`/reset-password?email=${encodeURIComponent(normalizedEmail)}`);
       }, 700);
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Unable to request password reset.");
+      toast.error(submitError instanceof Error ? submitError.message : "Unable to request password reset.");
     } finally {
       setIsSubmitting(false);
     }
@@ -73,9 +70,6 @@ export default function ForgotPasswordForm() {
             type="email"
           />
         </label>
-
-        {message ? <p className="text-sm text-emerald-600">{message}</p> : null}
-        {error ? <p className="text-sm text-red-500">{error}</p> : null}
 
         <button type="submit" disabled={isSubmitting} className="button-blue w-full disabled:opacity-60">
           {isSubmitting ? "Sending code..." : "Send Reset Code"}

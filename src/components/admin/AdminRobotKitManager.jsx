@@ -2,6 +2,7 @@
 
 import MediaPicker from "@/components/admin/MediaPicker";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 const levels = ["Beginner", "Intermediate", "Advanced"];
 const emptyForm = {
@@ -47,7 +48,7 @@ export default function AdminRobotKitManager({ initialRobotKits }) {
   });
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [deletingKitId, setDeletingKitId] = useState("");
 
   const filteredRobotKits = useMemo(() => {
     const search = query.trim().toLowerCase();
@@ -64,7 +65,6 @@ export default function AdminRobotKitManager({ initialRobotKits }) {
 
   async function openCreateModal() {
     setForm(emptyForm);
-    setError("");
     setOpen(true);
   }
 
@@ -81,7 +81,6 @@ export default function AdminRobotKitManager({ initialRobotKits }) {
       description: kit.description || "",
       featured: Boolean(kit.featured)
     });
-    setError("");
     setOpen(true);
   }
 
@@ -90,7 +89,6 @@ export default function AdminRobotKitManager({ initialRobotKits }) {
 
     try {
       setSubmitting(true);
-      setError("");
 
       const payload = {
         ...form,
@@ -114,8 +112,9 @@ export default function AdminRobotKitManager({ initialRobotKits }) {
 
       setRobotKits((current) => (form.id ? current.map((kit) => (kit.id === form.id ? result.data : kit)) : [result.data, ...current]));
       setOpen(false);
+      toast.success(form.id ? "Robot kit updated." : "Robot kit created.");
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Unable to save robot kit.");
+      toast.error(submitError instanceof Error ? submitError.message : "Unable to save robot kit.");
     } finally {
       setSubmitting(false);
     }
@@ -129,6 +128,8 @@ export default function AdminRobotKitManager({ initialRobotKits }) {
     }
 
     try {
+      setDeletingKitId(kitId);
+
       const response = await fetch(`/api/robot-kits/${kitId}`, {
         method: "DELETE"
       });
@@ -139,8 +140,11 @@ export default function AdminRobotKitManager({ initialRobotKits }) {
       }
 
       setRobotKits((current) => current.filter((kit) => kit.id !== kitId));
+      toast.success("Robot kit deleted.");
     } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : "Unable to delete robot kit.");
+      toast.error(deleteError instanceof Error ? deleteError.message : "Unable to delete robot kit.");
+    } finally {
+      setDeletingKitId("");
     }
   }
 
@@ -166,8 +170,6 @@ export default function AdminRobotKitManager({ initialRobotKits }) {
         />
       </div>
 
-      {error ? <p className="mt-4 text-sm text-red-500">{error}</p> : null}
-
       <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {filteredRobotKits.map((kit) => (
           <article key={kit.id} className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_16px_32px_rgba(15,23,42,0.05)]">
@@ -192,8 +194,13 @@ export default function AdminRobotKitManager({ initialRobotKits }) {
                   <button type="button" onClick={() => openEditModal(kit)} className="text-sm font-medium text-brand-blue">
                     Edit
                   </button>
-                  <button type="button" onClick={() => handleDelete(kit.id)} className="text-sm font-medium text-red-500">
-                    Delete
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(kit.id)}
+                    disabled={deletingKitId === kit.id}
+                    className="text-sm font-medium text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {deletingKitId === kit.id ? "Deleting..." : "Delete"}
                   </button>
                 </div>
               </div>

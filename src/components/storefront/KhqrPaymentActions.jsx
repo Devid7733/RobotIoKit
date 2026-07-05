@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 
 const EXPIRED_MESSAGE = "Payment expired. Please place your order again.";
 
@@ -23,7 +24,6 @@ export default function KhqrPaymentActions({
   const router = useRouter();
   const hasExpiredRequestRun = useRef(false);
   const [isChecking, setIsChecking] = useState(false);
-  const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [remainingMs, setRemainingMs] = useState(() =>
     paymentExpiresAt ? new Date(paymentExpiresAt).getTime() - Date.now() : 0
@@ -87,7 +87,6 @@ export default function KhqrPaymentActions({
     try {
       setIsChecking(true);
       if (!silent) {
-        setError("");
         setNotice("");
       }
 
@@ -113,11 +112,12 @@ export default function KhqrPaymentActions({
       }
 
       const publicNumber = encodeURIComponent(orderNumber || orderId);
+      toast.success("Payment received.");
       router.push(`/checkout/success?orderId=${orderId}&orderNumber=${publicNumber}`);
       router.refresh();
     } catch (checkError) {
       if (!silent) {
-        setError(checkError instanceof Error ? checkError.message : "Unable to verify payment.");
+        toast.error(checkError instanceof Error ? checkError.message : "Unable to verify payment.");
       }
     } finally {
       setIsChecking(false);
@@ -149,7 +149,6 @@ export default function KhqrPaymentActions({
                 : "Check Payment"}
       </button>
       {notice ? <p className="text-center text-sm text-slate-500">{notice}</p> : null}
-      {error ? <p className="text-center text-sm text-red-500">{error}</p> : null}
       <Link href="/orders" className="text-center text-sm font-semibold text-brand-blue">
         Check payment later from My Orders
       </Link>

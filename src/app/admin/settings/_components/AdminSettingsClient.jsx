@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import Icon from "@/components/common/Icon";
 
 const emptyStoreForm = {
@@ -95,22 +96,11 @@ function SaveButton({ loading, children }) {
   );
 }
 
-function Message({ tone = "info", children }) {
-  const tones = {
-    info: "border-blue-200 bg-blue-50 text-blue-700",
-    success: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    error: "border-rose-200 bg-rose-50 text-rose-700"
-  };
-
-  return <div className={`rounded-lg border px-4 py-3 text-sm font-medium ${tones[tone]}`}>{children}</div>;
-}
-
 export default function AdminSettingsClient() {
   const [storeForm, setStoreForm] = useState(emptyStoreForm);
   const [paymentForm, setPaymentForm] = useState(emptyPaymentForm);
   const [loading, setLoading] = useState(true);
   const [savingSection, setSavingSection] = useState("");
-  const [message, setMessage] = useState({ tone: "", text: "" });
 
   useEffect(() => {
     let active = true;
@@ -128,10 +118,7 @@ export default function AdminSettingsClient() {
         setPaymentForm({ ...emptyPaymentForm, ...(data?.payment || {}) });
       } catch (loadError) {
         if (active) {
-          setMessage({
-            tone: "error",
-            text: loadError instanceof Error ? loadError.message : "Unable to load settings."
-          });
+          toast.error(loadError instanceof Error ? loadError.message : "Unable to load settings.");
         }
       } finally {
         if (active) {
@@ -158,7 +145,6 @@ export default function AdminSettingsClient() {
   async function saveSection(section, endpoint, payload, onSuccess) {
     try {
       setSavingSection(section);
-      setMessage({ tone: "", text: "" });
 
       const response = await fetch(endpoint, {
         method: "PATCH",
@@ -169,12 +155,9 @@ export default function AdminSettingsClient() {
       const data = await readJson(response, "Unable to save settings.");
 
       onSuccess(data);
-      setMessage({ tone: "success", text: "Settings saved." });
+      toast.success("Settings saved.");
     } catch (saveError) {
-      setMessage({
-        tone: "error",
-        text: saveError instanceof Error ? saveError.message : "Unable to save settings."
-      });
+      toast.error(saveError instanceof Error ? saveError.message : "Unable to save settings.");
     } finally {
       setSavingSection("");
     }
@@ -184,7 +167,7 @@ export default function AdminSettingsClient() {
     event.preventDefault();
 
     if (!isValidEmail(storeForm.supportEmail)) {
-      setMessage({ tone: "error", text: "Enter a valid support email address." });
+      toast.error("Enter a valid support email address.");
       return;
     }
 
@@ -207,8 +190,6 @@ export default function AdminSettingsClient() {
         </div>
         {loading ? <span className="badge-soft badge-blue">Loading</span> : null}
       </div>
-
-      {message.text ? <Message tone={message.tone}>{message.text}</Message> : null}
 
       <form onSubmit={saveStore}>
         <SectionCard

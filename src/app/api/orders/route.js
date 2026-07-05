@@ -53,7 +53,7 @@ export async function POST(request) {
     const missing = [];
     if (!fullName) missing.push("Full name");
     if (!phone) missing.push("Phone number");
-    if (!address) missing.push("Address");
+    if (body.fulfillmentMethod === "delivery" && !address) missing.push("Address");
     if (!["pickup", "delivery"].includes(body.fulfillmentMethod)) missing.push("Fulfillment method");
     if (!["KHQR", "CASH_ON_DELIVERY"].includes(body.paymentMethod)) missing.push("Payment method");
     if (missing.length > 0) {

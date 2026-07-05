@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import Icon from "@/components/common/Icon";
 
 const RESET_EMAIL_KEY = "robotiokitPasswordResetEmail";
 
@@ -22,9 +24,9 @@ export default function ResetPasswordForm({ initialEmail = "" }) {
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     if (initialEmail) {
@@ -48,16 +50,14 @@ export default function ResetPasswordForm({ initialEmail = "" }) {
 
   async function handleSubmit(event) {
     event.preventDefault();
-    setMessage("");
-    setError("");
 
     if (!email) {
-      setError("Please request a new password reset code.");
+      toast.error("Please request a new password reset code.");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError("Passwords do not match.");
+      toast.error("Passwords do not match.");
       return;
     }
 
@@ -79,14 +79,14 @@ export default function ResetPasswordForm({ initialEmail = "" }) {
 
       window.sessionStorage.removeItem(RESET_EMAIL_KEY);
       window.localStorage.removeItem(RESET_EMAIL_KEY);
-      setMessage("Password reset successfully. Redirecting to sign in...");
+      toast.success("Password reset successfully. Redirecting to sign in...");
 
       window.setTimeout(() => {
         router.push("/login");
         router.refresh();
       }, 1200);
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Unable to reset password.");
+      toast.error(submitError instanceof Error ? submitError.message : "Unable to reset password.");
     } finally {
       setIsSubmitting(false);
     }
@@ -121,28 +121,45 @@ export default function ResetPasswordForm({ initialEmail = "" }) {
 
         <label className="block">
           <span className="mb-2 block text-sm font-semibold text-slate-700">New password</span>
-          <input
-            className="input-base"
-            value={newPassword}
-            onChange={(event) => setNewPassword(event.target.value)}
-            placeholder="At least 8 characters"
-            type="password"
-          />
+          <div className="relative">
+            <input
+              className="input-base pr-11"
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              placeholder="At least 8 characters"
+              type={showNewPassword ? "text" : "password"}
+            />
+            <button
+              type="button"
+              onClick={() => setShowNewPassword((current) => !current)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              aria-label={showNewPassword ? "Hide password" : "Show password"}
+            >
+              <Icon name={showNewPassword ? "eyeOff" : "eye"} className="h-5 w-5" />
+            </button>
+          </div>
         </label>
 
         <label className="block">
           <span className="mb-2 block text-sm font-semibold text-slate-700">Confirm password</span>
-          <input
-            className="input-base"
-            value={confirmPassword}
-            onChange={(event) => setConfirmPassword(event.target.value)}
-            placeholder="Re-enter new password"
-            type="password"
-          />
+          <div className="relative">
+            <input
+              className="input-base pr-11"
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              placeholder="Re-enter new password"
+              type={showConfirmPassword ? "text" : "password"}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword((current) => !current)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+            >
+              <Icon name={showConfirmPassword ? "eyeOff" : "eye"} className="h-5 w-5" />
+            </button>
+          </div>
         </label>
-
-        {message ? <p className="text-sm text-emerald-600">{message}</p> : null}
-        {error ? <p className="text-sm text-red-500">{error}</p> : null}
 
         <button type="submit" disabled={isSubmitting || !email} className="button-blue w-full disabled:opacity-60">
           {isSubmitting ? "Resetting..." : "Reset Password"}

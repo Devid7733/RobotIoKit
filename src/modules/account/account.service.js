@@ -1,14 +1,5 @@
 import { findUserProfileById, updateUserAvatar, updateUserProfile } from "@/modules/account/account.repository";
-
-export const ACCOUNT_PROVINCES = [
-  "Phnom Penh",
-  "Kandal",
-  "Siem Reap",
-  "Battambang",
-  "Kampong Cham",
-  "Kampot",
-  "Preah Sihanouk"
-];
+import { CAMBODIA_PROVINCES } from "@/lib/provinces";
 
 function createServiceError(message, status = 400, fields = {}) {
   const error = new Error(message);
@@ -53,7 +44,6 @@ export function validateAccountProfileInput(body = {}) {
   const name = cleanText(body.name);
   const phone = cleanText(body.phone);
   const province = cleanText(body.province);
-  const city = cleanText(body.city);
   const address = cleanText(body.address);
 
   if (name && name.length < 2) {
@@ -68,12 +58,8 @@ export function validateAccountProfileInput(body = {}) {
     fields.phone = "Enter a valid phone number.";
   }
 
-  if (province && !ACCOUNT_PROVINCES.includes(province)) {
+  if (province && !CAMBODIA_PROVINCES.includes(province)) {
     fields.province = "Choose a supported province.";
-  }
-
-  if (city.length > 80) {
-    fields.city = "City or district must be 80 characters or fewer.";
   }
 
   if (address.length > 180) {
@@ -88,7 +74,6 @@ export function validateAccountProfileInput(body = {}) {
     name: nullableText(body.name),
     phone: nullableText(body.phone),
     province: nullableText(body.province),
-    city: nullableText(body.city),
     address: nullableText(body.address)
   };
 }

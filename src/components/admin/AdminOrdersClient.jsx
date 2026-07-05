@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import Icon from "@/components/common/Icon";
 
 const orderStatuses = ["ALL", "PENDING", "PREPARING", "SHIPPED", "COMPLETED", "CANCELLED"];
@@ -62,7 +63,6 @@ export default function AdminOrdersClient() {
   const [expandedId, setExpandedId] = useState("");
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState("");
-  const [error, setError] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -70,7 +70,6 @@ export default function AdminOrdersClient() {
     async function loadOrders() {
       try {
         setLoading(true);
-        setError("");
 
         const response = await fetch("/api/orders", { cache: "no-store" });
         const result = await response.json();
@@ -84,7 +83,7 @@ export default function AdminOrdersClient() {
         }
       } catch (loadError) {
         if (isMounted) {
-          setError(loadError instanceof Error ? loadError.message : "Unable to load orders.");
+          toast.error(loadError instanceof Error ? loadError.message : "Unable to load orders.");
         }
       } finally {
         if (isMounted) {
@@ -103,7 +102,6 @@ export default function AdminOrdersClient() {
   async function updateOrder(orderId, payload) {
     try {
       setSavingId(orderId);
-      setError("");
 
       const response = await fetch(`/api/orders/${orderId}`, {
         method: "PATCH",
@@ -120,8 +118,9 @@ export default function AdminOrdersClient() {
       }
 
       setOrders((current) => current.map((order) => (order.id === orderId ? result.data : order)));
+      toast.success("Order updated.");
     } catch (updateError) {
-      setError(updateError instanceof Error ? updateError.message : "Unable to update order.");
+      toast.error(updateError instanceof Error ? updateError.message : "Unable to update order.");
     } finally {
       setSavingId("");
     }
@@ -213,8 +212,6 @@ export default function AdminOrdersClient() {
             ))}
           </div>
         </div>
-
-        {error ? <p className="mt-4 text-sm text-red-500">{error}</p> : null}
 
         {loading ? (
           <div className="mt-6 overflow-hidden rounded-[24px] border border-slate-200">

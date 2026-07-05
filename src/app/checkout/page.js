@@ -17,7 +17,6 @@ export default async function CheckoutPage() {
         fullName: overview.user.name || "",
         phone: overview.user.phone || "",
         email: overview.user.email || "",
-        city: overview.user.city || "",
         province: overview.user.province || "Phnom Penh",
         address: overview.user.address || ""
       }

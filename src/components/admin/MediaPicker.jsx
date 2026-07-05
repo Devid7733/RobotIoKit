@@ -2,6 +2,7 @@
 
 import Icon from "@/components/common/Icon";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export default function MediaPicker({ value, onChange, label = "Image" }) {
   const [open, setOpen] = useState(false);
@@ -10,12 +11,10 @@ export default function MediaPicker({ value, onChange, label = "Image" }) {
   const [uploading, setUploading] = useState(false);
   const [deletingName, setDeletingName] = useState("");
   const [manualUrl, setManualUrl] = useState(value || "");
-  const [error, setError] = useState("");
 
   async function loadMedia() {
     try {
       setLoading(true);
-      setError("");
 
       const response = await fetch("/api/media", {
         cache: "no-store"
@@ -28,7 +27,7 @@ export default function MediaPicker({ value, onChange, label = "Image" }) {
 
       setMediaItems(result.data || []);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Unable to load media.");
+      toast.error(loadError instanceof Error ? loadError.message : "Unable to load media.");
     } finally {
       setLoading(false);
     }
@@ -49,7 +48,6 @@ export default function MediaPicker({ value, onChange, label = "Image" }) {
 
     try {
       setUploading(true);
-      setError("");
 
       const body = new FormData();
       body.append("file", file);
@@ -67,8 +65,9 @@ export default function MediaPicker({ value, onChange, label = "Image" }) {
       setMediaItems((current) => [result.data, ...current]);
       onChange(result.data.url);
       setManualUrl(result.data.url);
+      toast.success("Image uploaded.");
     } catch (uploadError) {
-      setError(uploadError instanceof Error ? uploadError.message : "Unable to upload image.");
+      toast.error(uploadError instanceof Error ? uploadError.message : "Unable to upload image.");
     } finally {
       setUploading(false);
       event.target.value = "";
@@ -91,7 +90,6 @@ export default function MediaPicker({ value, onChange, label = "Image" }) {
 
     try {
       setDeletingName(item.name);
-      setError("");
 
       let response = await fetch(`/api/media?url=${encodeURIComponent(item.url)}`, {
         method: "DELETE"
@@ -126,8 +124,9 @@ export default function MediaPicker({ value, onChange, label = "Image" }) {
         onChange("");
         setManualUrl("");
       }
+      toast.success("Image deleted.");
     } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : "Unable to delete image.");
+      toast.error(deleteError instanceof Error ? deleteError.message : "Unable to delete image.");
     } finally {
       setDeletingName("");
     }
@@ -202,8 +201,6 @@ export default function MediaPicker({ value, onChange, label = "Image" }) {
                     Use This URL
                   </button>
                 </div>
-
-                {error ? <div className="text-sm text-red-500">{error}</div> : null}
               </div>
 
               <div>

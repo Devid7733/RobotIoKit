@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import Icon from "@/components/common/Icon";
 
 async function readJson(response) {
@@ -28,13 +29,11 @@ function formatDate(value) {
 export default function AdminNotificationsClient() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [savingId, setSavingId] = useState("");
 
   const unreadCount = useMemo(() => notifications.filter((notification) => !notification.read).length, [notifications]);
 
   const loadNotifications = useCallback(async () => {
-    setError("");
     const response = await fetch("/api/admin/notifications", { cache: "no-store" });
     const data = await readJson(response);
     setNotifications(Array.isArray(data?.notifications) ? data.notifications : []);
@@ -42,7 +41,7 @@ export default function AdminNotificationsClient() {
 
   useEffect(() => {
     loadNotifications()
-      .catch((loadError) => setError(loadError.message || "Unable to load notifications."))
+      .catch((loadError) => toast.error(loadError.message || "Unable to load notifications."))
       .finally(() => setLoading(false));
   }, [loadNotifications]);
 
@@ -60,7 +59,7 @@ export default function AdminNotificationsClient() {
       await loadNotifications();
       window.dispatchEvent(new Event("admin:notifications-read"));
     } catch (markError) {
-      setError(markError.message || "Unable to mark notification read.");
+      toast.error(markError.message || "Unable to mark notification read.");
     } finally {
       setSavingId("");
     }
@@ -79,8 +78,9 @@ export default function AdminNotificationsClient() {
       await readJson(response);
       await loadNotifications();
       window.dispatchEvent(new Event("admin:notifications-read"));
+      toast.success("All notifications marked read.");
     } catch (markError) {
-      setError(markError.message || "Unable to mark notifications read.");
+      toast.error(markError.message || "Unable to mark notifications read.");
     } finally {
       setSavingId("");
     }
@@ -104,12 +104,6 @@ export default function AdminNotificationsClient() {
           </button>
         ) : null}
       </div>
-
-      {error ? (
-        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
-      ) : null}
 
       <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
         {loading ? (

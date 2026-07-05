@@ -737,7 +737,6 @@ function buildTimelineEntries(existingOrder, body, actorName) {
     body.customerName !== existingOrder.customerName ||
     body.customerPhone !== existingOrder.customerPhone ||
     body.province !== existingOrder.province ||
-    body.city !== existingOrder.city ||
     body.address !== existingOrder.address
   ) {
     timelineEntries.push({
@@ -804,7 +803,6 @@ export async function updateOrderByAdmin({ orderId, body, actorName }) {
         customerName: body.customerName,
         customerPhone: body.customerPhone,
         province: body.province,
-        city: body.city,
         address: body.address,
         note: body.note
       },
