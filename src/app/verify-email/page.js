@@ -13,7 +13,7 @@ export default async function VerifyEmailPage({ searchParams }) {
   const initialEmail = typeof params?.email === "string" ? params.email : "";
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-6 py-12">
+    <main className="min-h-screen">
       <VerifyEmailForm initialEmail={initialEmail} />
     </main>
   );

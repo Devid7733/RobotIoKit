@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useCart } from "@/components/storefront/CartProvider";
+import AuthBrandPanel from "@/components/storefront/AuthBrandPanel";
 
 const STORAGE_KEY = "robotiokitVerificationEmail";
 
@@ -115,54 +116,57 @@ export default function VerifyEmailForm({ initialEmail = "" }) {
   }
 
   return (
-    <div className="w-full max-w-lg rounded-[28px] border border-slate-200/80 bg-white p-8 shadow-[0_20px_45px_rgba(15,23,42,0.06)]">
-      <div className="text-center">
-        <Link href="/" className="font-display text-4xl font-bold tracking-tight text-brand-blue">
-          Robot<span className="text-brand-orange">Io</span>Kit
-        </Link>
-        <div className="mx-auto mt-7 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-mist text-2xl font-bold text-brand-blue">
-          @
-        </div>
-        <h1 className="mt-6 font-display text-3xl font-semibold tracking-tight text-slate-900">
-          Verify your email
-        </h1>
-        <p className="mt-3 text-sm leading-7 text-slate-500">{helperText}</p>
-      </div>
-
-      <form onSubmit={handleVerify} className="mt-8 space-y-4">
-        <label className="block">
-          <span className="mb-2 block text-sm font-semibold text-slate-700">Verification code</span>
-          <input
-            className="input-base text-center text-2xl font-semibold tracking-[0.35em]"
-            value={otp}
-            onChange={updateOtp}
-            inputMode="numeric"
-            placeholder="000000"
-            type="text"
-          />
-        </label>
-
-        {isVerified ? (
-          <Link href="/login" className="button-blue w-full">
-            Continue to Sign In
+    <div className="grid min-h-screen lg:grid-cols-2">
+      <AuthBrandPanel />
+      <div className="flex min-h-screen items-center justify-center px-6 py-12">
+        <div className="w-full max-w-lg">
+          <Link href="/" className="font-display text-3xl font-bold tracking-tight text-brand-blue">
+            Robot<span className="text-brand-orange">Io</span>Kit
           </Link>
-        ) : (
-          <button type="submit" disabled={isVerifying || !email} className="button-blue w-full disabled:opacity-60">
-            {isVerifying ? "Verifying..." : "Verify Email"}
-          </button>
-        )}
-      </form>
+          <div className="mt-7 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-mist text-2xl font-bold text-brand-blue">
+            @
+          </div>
+          <h1 className="mt-6 font-display text-3xl font-semibold tracking-tight text-slate-900">
+            Verify your email
+          </h1>
+          <p className="mt-3 text-sm leading-7 text-slate-500">{helperText}</p>
 
-      <div className="mt-5 flex flex-col items-center gap-3 text-center text-sm text-slate-500 sm:flex-row sm:justify-between sm:text-left">
-        <span>Did not receive the code?</span>
-        <button
-          type="button"
-          onClick={handleResend}
-          disabled={isResending}
-          className="font-semibold text-brand-blue transition hover:text-[#163fe0] disabled:cursor-not-allowed disabled:text-slate-400"
-        >
-          {isResending ? "Sending..." : "Resend code"}
-        </button>
+          <form onSubmit={handleVerify} className="mt-8 space-y-4">
+            <label className="block">
+              <span className="mb-2 block text-sm font-semibold text-slate-700">Verification code</span>
+              <input
+                className="input-base text-center text-2xl font-semibold tracking-[0.35em]"
+                value={otp}
+                onChange={updateOtp}
+                inputMode="numeric"
+                placeholder="000000"
+                type="text"
+              />
+            </label>
+
+            {isVerified ? (
+              <Link href="/login" className="button-blue w-full">
+                Continue to Sign In
+              </Link>
+            ) : (
+              <button type="submit" disabled={isVerifying || !email} className="button-blue w-full disabled:opacity-60">
+                {isVerifying ? "Verifying..." : "Verify Email"}
+              </button>
+            )}
+          </form>
+
+          <div className="mt-5 flex flex-col items-center gap-3 text-center text-sm text-slate-500 sm:flex-row sm:justify-between sm:text-left">
+            <span>Did not receive the code?</span>
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={isResending}
+              className="font-semibold text-brand-blue transition hover:text-[#163fe0] disabled:cursor-not-allowed disabled:text-slate-400"
+            >
+              {isResending ? "Sending..." : "Resend code"}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
