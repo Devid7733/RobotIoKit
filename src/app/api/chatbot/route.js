@@ -28,8 +28,10 @@ function cleanChatbotReply(reply = "") {
     .replace(/retrieval result/gi, "result")
     .replace(/matched items/gi, "items")
     .replace(/database result/gi, "result")
-    .replace(/\s+/g, " ")
-    .replace(/\s+([.,!?។])/g, "$1")
+    .replace(/[ \t]+/g, " ")
+    .replace(/ *\n */g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]+([.,!?។])/g, "$1")
     .trim()
     .replace(/^["'](.+)["']$/s, "$1");
 }
