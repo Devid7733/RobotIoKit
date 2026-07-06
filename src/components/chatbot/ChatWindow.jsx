@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import Icon from "@/components/common/Icon";
 
 const STORAGE_KEY = "robotiokit-chat-history";
@@ -361,31 +363,29 @@ function PromptChips({ prompts, onSelect, disabled }) {
   );
 }
 
-function LinkifiedText({ text }) {
-  const parts = String(text || "").split(/(https?:\/\/[^\s]+)/g);
+const markdownComponents = {
+  p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+  a: ({ children, href }) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="font-semibold text-brand-blue underline decoration-brand-blue/30 underline-offset-2 hover:decoration-brand-blue"
+    >
+      {children}
+    </a>
+  ),
+  ol: ({ children }) => <ol className="mb-2 list-decimal space-y-1 pl-5 last:mb-0">{children}</ol>,
+  ul: ({ children }) => <ul className="mb-2 list-disc space-y-1 pl-5 last:mb-0">{children}</ul>,
+  li: ({ children }) => <li className="pl-1">{children}</li>
+};
 
-  return parts.map((part, index) => {
-    if (!/^https?:\/\//i.test(part)) {
-      return part;
-    }
-
-    const cleanUrl = part.replace(/[),.]+$/g, "");
-    const trailing = part.slice(cleanUrl.length);
-
-    return (
-      <span key={`${cleanUrl}-${index}`}>
-        <a
-          href={cleanUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-semibold text-brand-blue underline decoration-brand-blue/30 underline-offset-2 hover:decoration-brand-blue"
-        >
-          Open map
-        </a>
-        {trailing}
-      </span>
-    );
-  });
+function MarkdownMessage({ text }) {
+  return (
+    <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+      {String(text || "")}
+    </ReactMarkdown>
+  );
 }
 
 export default function ChatWindow({ onClose }) {
@@ -617,7 +617,7 @@ export default function ChatWindow({ onClose }) {
           return (
             <div key={`${item.role}-${index}`} className={isBot ? "mr-3" : "ml-auto max-w-[84%]"}>
               <div
-                className={`whitespace-pre-wrap break-words rounded-2xl px-4 py-3 text-sm leading-6 ${
+                className={`break-words rounded-2xl px-4 py-3 text-sm leading-6 ${
                   detectKhmer(item.content) ? "font-sans leading-7" : ""
                 } ${
                   isBot
@@ -625,7 +625,7 @@ export default function ChatWindow({ onClose }) {
                     : "bg-brand-blue text-white shadow-[0_14px_30px_rgba(37,99,235,0.2)]"
                 }`}
               >
-                <LinkifiedText text={item.content} />
+                <MarkdownMessage text={item.content} />
               </div>
 
               {isWelcome ? (
