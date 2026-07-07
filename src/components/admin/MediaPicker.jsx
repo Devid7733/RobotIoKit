@@ -169,7 +169,7 @@ export default function MediaPicker({ value, onChange, label = "Image" }) {
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 px-4">
           <div className="surface-card w-full max-w-4xl">
             <div className="flex items-center justify-between">
-              <h3 className="font-display text-2xl font-semibold text-slate-900">Media Picker</h3>
+              <h3 className="heading-card">Media Picker</h3>
               <button type="button" onClick={() => setOpen(false)} className="text-slate-400 transition hover:text-slate-700">
                 x
               </button>

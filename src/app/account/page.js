@@ -124,7 +124,7 @@ export default async function AccountPage() {
 
           <div className="section-card">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="heading-section text-2xl">Recent Orders</h2>
+              <h2 className="heading-card">Recent Orders</h2>
               <Link href="/orders" className="text-sm font-semibold text-brand-blue">
                 View all orders
               </Link>

@@ -1,4 +1,5 @@
 import {
+  countAdminProducts,
   countProducts,
   countStorefrontProducts,
   createProduct as createProductRecord,
@@ -366,6 +367,35 @@ export async function listAdminProducts() {
   return products.map(mapProductRecord);
 }
 
+export async function listAdminProductsPaginated({ search, page = 1, pageSize = 20 } = {}) {
+  const normalizedSearch = String(search || "").trim();
+  const safePage = Math.max(1, Number(page) || 1);
+  const skip = (safePage - 1) * pageSize;
+
+  const where = normalizedSearch
+    ? {
+        OR: [
+          { name: { contains: normalizedSearch, mode: "insensitive" } },
+          { sku: { contains: normalizedSearch, mode: "insensitive" } },
+          { category: { name: { contains: normalizedSearch, mode: "insensitive" } } }
+        ]
+      }
+    : {};
+
+  const [products, total] = await Promise.all([
+    findAdminProducts({ where, skip, take: pageSize }),
+    countAdminProducts(where)
+  ]);
+
+  return {
+    items: products.map(mapProductRecord),
+    total,
+    page: safePage,
+    pageSize,
+    totalPages: Math.max(1, Math.ceil(total / pageSize))
+  };
+}
+
 export async function listProductCategories() {
   return findCategories();
 }
@@ -413,32 +443,61 @@ export async function deleteProduct(id) {
   return deleteProductRecord(id);
 }
 
+// Catalog listings only change via admin edits, but are re-queried on every
+// filter/pagination combination a shopper requests — cache each distinct
+// combination for a short window instead of hitting the database every time.
+// unstable_cache incorporates the actual call arguments into its cache key,
+// so different filters/pages get their own entries automatically.
+const getCachedStorefrontProducts = unstable_cache(
+  async (categorySlug, voltage, search, maxPrice, minPrice, inStock) => {
+    const products = await findStorefrontProducts(categorySlug, voltage, search, maxPrice, minPrice, inStock);
+    return products.map(enrichProduct);
+  },
+  ["storefront-products"],
+  { revalidate: 60 }
+);
+
 export async function listStorefrontProducts(categorySlug, voltage, search, maxPrice, minPrice, inStock) {
-  const products = await findStorefrontProducts(categorySlug, voltage, search, maxPrice, minPrice, inStock);
-  return products.map(enrichProduct);
+  return getCachedStorefrontProducts(categorySlug, voltage, search, maxPrice, minPrice, inStock);
 }
+
+const getCachedStorefrontProductsPaginated = unstable_cache(
+  async (categorySlug, voltage, search, maxPrice, minPrice, inStock, page = 1, pageSize = 24) => {
+    const safePage = Math.max(1, Number(page) || 1);
+    const skip = (safePage - 1) * pageSize;
+
+    const [products, total] = await Promise.all([
+      findStorefrontProducts(categorySlug, voltage, search, maxPrice, minPrice, inStock, { skip, take: pageSize }),
+      countStorefrontProducts(categorySlug, voltage, search, maxPrice, minPrice, inStock)
+    ]);
+
+    return {
+      products: products.map(enrichProduct),
+      total,
+      page: safePage,
+      pageSize,
+      totalPages: Math.max(1, Math.ceil(total / pageSize))
+    };
+  },
+  ["storefront-products-paginated"],
+  { revalidate: 60 }
+);
 
 export async function listStorefrontProductsPaginated(categorySlug, voltage, search, maxPrice, minPrice, inStock, page = 1, pageSize = 24) {
-  const safePage = Math.max(1, Number(page) || 1);
-  const skip = (safePage - 1) * pageSize;
-
-  const [products, total] = await Promise.all([
-    findStorefrontProducts(categorySlug, voltage, search, maxPrice, minPrice, inStock, { skip, take: pageSize }),
-    countStorefrontProducts(categorySlug, voltage, search, maxPrice, minPrice, inStock)
-  ]);
-
-  return {
-    products: products.map(enrichProduct),
-    total,
-    page: safePage,
-    pageSize,
-    totalPages: Math.max(1, Math.ceil(total / pageSize))
-  };
+  return getCachedStorefrontProductsPaginated(categorySlug, voltage, search, maxPrice, minPrice, inStock, page, pageSize);
 }
 
+const getCachedStorefrontVoltageOptions = unstable_cache(
+  async (categorySlug, search) => {
+    const products = await findStorefrontProductVoltages(categorySlug, search);
+    return normalizeVoltageList(products.flatMap((product) => product.voltages || []));
+  },
+  ["storefront-voltage-options"],
+  { revalidate: 60 }
+);
+
 export async function listStorefrontVoltageOptions(categorySlug, search) {
-  const products = await findStorefrontProductVoltages(categorySlug, search);
-  return normalizeVoltageList(products.flatMap((product) => product.voltages || []));
+  return getCachedStorefrontVoltageOptions(categorySlug, search);
 }
 
 // Memoized per-request: the product detail page calls this from both

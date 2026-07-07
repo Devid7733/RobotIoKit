@@ -1,9 +1,16 @@
 import prisma from "@/lib/prisma";
 
-export async function findAdminRobotKits() {
+export async function findAdminRobotKits({ where = {}, skip, take } = {}) {
   return prisma.robotKit.findMany({
-    orderBy: { createdAt: "desc" }
+    where,
+    orderBy: { createdAt: "desc" },
+    ...(skip != null ? { skip } : {}),
+    ...(take != null ? { take } : {})
   });
+}
+
+export async function countAdminRobotKits(where = {}) {
+  return prisma.robotKit.count({ where });
 }
 
 export async function findRobotKitById(id) {

@@ -2,23 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
+import { getInitials } from "@/lib/userDisplay";
 
 const allowedAvatarTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const maxAvatarSize = 2 * 1024 * 1024;
 
-function getInitials(user) {
-  const source = user.name || user.email || "Customer";
-  const parts = source.replace(/@.*/, "").split(/\s+/).filter(Boolean);
-
-  return parts
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join("");
-}
-
 export default function AccountAvatarUploader({ user }) {
   const router = useRouter();
+  const { update } = useSession();
   const inputRef = useRef(null);
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl || user.image || "");
   const [previewUrl, setPreviewUrl] = useState("");
@@ -100,6 +93,7 @@ export default function AccountAvatarUploader({ user }) {
       setAvatarUrl(result.data.avatarUrl || "");
       resetSelection();
       toast.success("Profile photo updated.");
+      await update({ avatarUrl: result.data.avatarUrl || "" });
       router.refresh();
     } catch (uploadError) {
       toast.error(uploadError instanceof Error ? uploadError.message : "Unable to upload avatar.");

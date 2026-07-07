@@ -428,7 +428,7 @@ export default function AdminAnalyticsClient() {
     <section className="admin-page">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h2 className="font-display text-2xl font-semibold text-slate-900">Analytics</h2>
+          <h2 className="heading-card">Analytics</h2>
           <p className="mt-2 text-sm text-slate-500">Store performance overview</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -471,7 +471,7 @@ export default function AdminAnalyticsClient() {
       <div className={`grid gap-6 transition duration-300 xl:grid-cols-2 ${isRefreshing ? "opacity-75" : "opacity-100"}`}>
         <div className={`surface-card transition duration-300 ${isRefreshing ? "translate-y-1" : "translate-y-0"}`}>
           <div className="flex items-center justify-between gap-4">
-            <h3 className="font-display text-2xl font-semibold text-slate-900">Orders Trend</h3>
+            <h3 className="heading-card">Orders Trend</h3>
             <div className="flex items-center gap-3">
               {isRefreshing ? (
                 <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-brand-blue">
@@ -489,7 +489,7 @@ export default function AdminAnalyticsClient() {
 
         <div className={`surface-card transition duration-300 ${isRefreshing ? "translate-y-1" : "translate-y-0"}`}>
           <div className="flex items-center justify-between gap-4">
-            <h3 className="font-display text-2xl font-semibold text-slate-900">Revenue Trend</h3>
+            <h3 className="heading-card">Revenue Trend</h3>
             <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Revenue by period</div>
           </div>
           <div className="mt-8">
@@ -500,7 +500,7 @@ export default function AdminAnalyticsClient() {
 
       <div className={`grid gap-6 transition duration-300 xl:grid-cols-2 ${isRefreshing ? "opacity-80" : "opacity-100"}`}>
         <div className={`surface-card transition duration-300 ${isRefreshing ? "translate-y-1" : "translate-y-0"}`}>
-          <h3 className="font-display text-2xl font-semibold text-slate-900">Best Selling Products</h3>
+          <h3 className="heading-card">Best Selling Products</h3>
           <div className="mt-8 space-y-5">
             {data.bestSellingProducts.length ? (
               data.bestSellingProducts.map((item, index) => (
@@ -529,7 +529,7 @@ export default function AdminAnalyticsClient() {
         </div>
 
         <div className={`surface-card transition duration-300 ${isRefreshing ? "translate-y-1" : "translate-y-0"}`}>
-          <h3 className="font-display text-2xl font-semibold text-slate-900">Popular Robot Kits</h3>
+          <h3 className="heading-card">Popular Robot Kits</h3>
           {data.bestSellingRobotKits.length ? (
             <div className="mt-8 grid gap-6 lg:grid-cols-[260px,1fr] lg:items-center">
               <div className="relative mx-auto h-56 w-56">
@@ -567,7 +567,7 @@ export default function AdminAnalyticsClient() {
 
       <div className={`grid gap-6 transition duration-300 xl:grid-cols-3 ${isRefreshing ? "opacity-80" : "opacity-100"}`}>
         <div className={`surface-card transition duration-300 ${isRefreshing ? "translate-y-1" : "translate-y-0"}`}>
-          <h3 className="font-display text-2xl font-semibold text-slate-900">Order Status</h3>
+          <h3 className="heading-card">Order Status</h3>
           <div className="mt-6 space-y-3">
             {data.orderStatusBreakdown.map((item) => (
               <div key={item.status} className="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-3">
@@ -582,7 +582,7 @@ export default function AdminAnalyticsClient() {
         </div>
 
         <div className={`surface-card transition duration-300 ${isRefreshing ? "translate-y-1" : "translate-y-0"}`}>
-          <h3 className="font-display text-2xl font-semibold text-slate-900">Payment Status</h3>
+          <h3 className="heading-card">Payment Status</h3>
           <div className="mt-6 space-y-3">
             {data.paymentStatusBreakdown.map((item) => (
               <div key={item.status} className="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-3">
@@ -597,7 +597,7 @@ export default function AdminAnalyticsClient() {
         </div>
 
         <div className={`surface-card transition duration-300 ${isRefreshing ? "translate-y-1" : "translate-y-0"}`}>
-          <h3 className="font-display text-2xl font-semibold text-slate-900">Payment Method</h3>
+          <h3 className="heading-card">Payment Method</h3>
           <div className="mt-6 space-y-3">
             {data.paymentMethodBreakdown.map((item) => (
               <div key={item.method} className="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-3">

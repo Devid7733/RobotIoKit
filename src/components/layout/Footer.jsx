@@ -24,12 +24,6 @@ const footerColumns = [
   }
 ];
 
-const socialLinks = [
-  { label: "Facebook", href: "#", className: "bg-blue-600" },
-  { label: "YouTube", href: "#", className: "bg-red-500" },
-  { label: "WhatsApp", href: "#", className: "bg-emerald-500" }
-];
-
 export default function Footer() {
   return (
     <footer className="bg-brand-dark text-slate-200">
@@ -43,18 +37,6 @@ export default function Footer() {
               Your trusted source for robotics components, development boards, sensors, and
               complete robot kits for engineers, students, and hobbyists.
             </p>
-            <div className="mt-6 flex gap-3">
-              {socialLinks.map((link) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  aria-label={link.label}
-                  className={`inline-flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-white ${link.className}`}
-                >
-                  {link.label.charAt(0)}
-                </Link>
-              ))}
-            </div>
           </div>
 
           {footerColumns.map((column) => (
@@ -86,10 +68,18 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 flex flex-col gap-3 border-t border-white/10 pt-6 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between">
-          <div>© 2026 RobotIoKit. All rights reserved.</div>
-          <Link href="/privacy" className="transition hover:text-white">
-            Privacy Notice
-          </Link>
+          <div>© {new Date().getFullYear()} RobotIoKit. All rights reserved.</div>
+          <div className="flex flex-wrap gap-x-5 gap-y-2">
+            <Link href="/privacy" className="transition hover:text-white">
+              Privacy Notice
+            </Link>
+            <Link href="/terms" className="transition hover:text-white">
+              Terms of Service
+            </Link>
+            <Link href="/refund-policy" className="transition hover:text-white">
+              Refund & Shipping Policy
+            </Link>
+          </div>
           <div>Built for Robotics Engineers & Enthusiasts</div>
         </div>
       </div>

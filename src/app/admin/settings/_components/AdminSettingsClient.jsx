@@ -184,9 +184,8 @@ export default function AdminSettingsClient() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand-orange">Admin setup</p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">Settings</h1>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">Manage public store details and payment display settings.</p>
+          <p className="admin-kicker">Admin setup</p>
+          <p className="admin-description max-w-3xl">Manage public store details and payment display settings.</p>
         </div>
         {loading ? <span className="badge-soft badge-blue">Loading</span> : null}
       </div>

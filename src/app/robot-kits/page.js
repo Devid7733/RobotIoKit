@@ -98,7 +98,7 @@ export default async function RobotKitsPage({ searchParams }) {
         </nav>
 
         <section>
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-slate-900">
+          <h1 className="font-display text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
             Robot Kits
           </h1>
           <p className="mt-4 max-w-3xl text-lg text-slate-500">

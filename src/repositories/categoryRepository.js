@@ -6,8 +6,9 @@ export async function findCategories(orderBy = { name: "asc" }) {
   });
 }
 
-export async function findAdminCategories() {
+export async function findAdminCategories({ where = {}, skip, take } = {}) {
   return prisma.category.findMany({
+    where,
     orderBy: { name: "asc" },
     include: {
       _count: {
@@ -15,8 +16,14 @@ export async function findAdminCategories() {
           products: true
         }
       }
-    }
+    },
+    ...(skip != null ? { skip } : {}),
+    ...(take != null ? { take } : {})
   });
+}
+
+export async function countAdminCategories(where = {}) {
+  return prisma.category.count({ where });
 }
 
 export async function findCategoriesForHome(limit = 6) {

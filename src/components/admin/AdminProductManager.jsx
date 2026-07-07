@@ -2,7 +2,7 @@
 
 import Icon from "@/components/common/Icon";
 import MediaPicker from "@/components/admin/MediaPicker";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 const VOLTAGE_OPTIONS = ["3.3V", "3.7V", "4.8V", "5V", "6V", "7.4V", "9V", "12V", "24V"];
@@ -45,10 +45,13 @@ function formatVoltages(voltages) {
   return Array.isArray(voltages) && voltages.length ? voltages.join(", ") : "Not specified";
 }
 
-export default function AdminProductManager({ initialProducts, categories }) {
-  const [products, setProducts] = useState(initialProducts);
-  const [categoryOptions, setCategoryOptions] = useState(categories);
+export default function AdminProductManager({ categories }) {
+  const [products, setProducts] = useState([]);
+  const [meta, setMeta] = useState({ page: 1, totalPages: 1, total: 0 });
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [categoryOptions, setCategoryOptions] = useState(categories);
   const [form, setForm] = useState({
     ...emptyForm,
     categoryId: categories[0]?.id || ""
@@ -61,18 +64,35 @@ export default function AdminProductManager({ initialProducts, categories }) {
   const [deletingProductId, setDeletingProductId] = useState("");
   const [inlineCategoryName, setInlineCategoryName] = useState("");
 
-  const filteredProducts = useMemo(() => {
-    const search = query.trim().toLowerCase();
-    if (!search) {
-      return products;
+  const fetchProducts = useCallback(async (search, currentPage) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ page: String(currentPage) });
+      if (search) params.set("search", search);
+      const res = await fetch(`/api/admin/products?${params}`);
+      const json = await res.json();
+      if (json.ok) {
+        setProducts(json.data);
+        setMeta(json.meta);
+      }
+    } catch {
+      // silent
+    } finally {
+      setLoading(false);
     }
+  }, []);
 
-    return products.filter((product) =>
-      [product.name, product.sku, product.category?.name]
-        .filter(Boolean)
-        .some((value) => value.toLowerCase().includes(search))
-    );
-  }, [products, query]);
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setPage(1);
+      fetchProducts(query, 1);
+    }, 300);
+    return () => clearTimeout(id);
+  }, [query, fetchProducts]);
+
+  useEffect(() => {
+    fetchProducts(query, page);
+  }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadCategories() {
     try {
@@ -151,13 +171,15 @@ export default function AdminProductManager({ initialProducts, categories }) {
         throw new Error(result.message || "Unable to save product.");
       }
 
-      setProducts((current) =>
-        form.id
-          ? current.map((product) => (product.id === form.id ? result.data : product))
-          : [result.data, ...current]
-      );
       setOpen(false);
       toast.success(form.id ? "Product updated." : "Product created.");
+
+      if (form.id) {
+        fetchProducts(query, page);
+      } else {
+        setPage(1);
+        fetchProducts(query, 1);
+      }
     } catch (submitError) {
       toast.error(submitError instanceof Error ? submitError.message : "Unable to save product.");
     } finally {
@@ -264,8 +286,8 @@ export default function AdminProductManager({ initialProducts, categories }) {
         throw new Error(result.message || "Unable to delete product.");
       }
 
-      setProducts((current) => current.filter((product) => product.id !== productId));
       toast.success("Product deleted.");
+      fetchProducts(query, page);
     } catch (deleteError) {
       toast.error(deleteError instanceof Error ? deleteError.message : "Unable to delete product.");
     } finally {
@@ -277,8 +299,8 @@ export default function AdminProductManager({ initialProducts, categories }) {
     <section className="surface-card">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h2 className="font-display text-2xl font-semibold text-slate-900">Products</h2>
-          <p className="mt-2 text-sm text-slate-500">{products.length} products in catalog</p>
+          <h2 className="heading-card">Products</h2>
+          <p className="mt-2 text-sm text-slate-500">{meta.total} products in catalog</p>
         </div>
         <button type="button" onClick={openCreateModal} className="button-blue px-5 py-2.5">
           Add Product
@@ -308,55 +330,101 @@ export default function AdminProductManager({ initialProducts, categories }) {
             </tr>
           </thead>
           <tbody>
-            {filteredProducts.map((product) => (
-              <tr key={product.id} className="border-t border-slate-100 text-sm text-slate-700">
-                <td className="px-5 py-4">
-                  <div className="h-12 w-12 overflow-hidden rounded-2xl bg-slate-100">
-                    {product.image ? (
-                      <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-xs text-slate-400">No image</div>
-                    )}
-                  </div>
-                </td>
-                <td className="px-5 py-4">
-                  <div className="font-medium text-slate-900">{product.name}</div>
-                  <div className="mt-1 text-xs text-slate-500">{product.sku || product.slug}</div>
-                </td>
-                <td className="px-5 py-4">{product.category?.name || "Uncategorized"}</td>
-                <td className="px-5 py-4 font-semibold text-slate-900">{formatMoney(product.price)}</td>
-                <td className="px-5 py-4">
-                  <span className="badge-pill badge-emerald">
-                    {product.stock}
-                  </span>
-                  <div className="mt-2 text-xs text-slate-500">{formatVoltages(getProductVoltages(product))}</div>
-                </td>
-                <td className="px-5 py-4">
-                  <div className="flex items-center gap-3">
-                    <button type="button" onClick={() => openEditModal(product)} className="text-sm font-medium text-brand-blue">
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(product.id)}
-                      disabled={deletingProductId === product.id}
-                      className="text-sm font-medium text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {deletingProductId === product.id ? "Deleting..." : "Delete"}
-                    </button>
-                  </div>
+            {loading ? (
+              <tr>
+                <td colSpan={6} className="px-5 py-10 text-center text-slate-400">
+                  Loading…
                 </td>
               </tr>
-            ))}
+            ) : products.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-5 py-10 text-center text-slate-400">
+                  {query ? `No products found for "${query}"` : "No products yet."}
+                </td>
+              </tr>
+            ) : (
+              products.map((product) => (
+                <tr key={product.id} className="border-t border-slate-100 text-sm text-slate-700">
+                  <td className="px-5 py-4">
+                    <div className="h-12 w-12 overflow-hidden rounded-2xl bg-slate-100">
+                      {product.image ? (
+                        <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-xs text-slate-400">No image</div>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="font-medium text-slate-900">{product.name}</div>
+                    <div className="mt-1 text-xs text-slate-500">{product.sku || product.slug}</div>
+                  </td>
+                  <td className="px-5 py-4">{product.category?.name || "Uncategorized"}</td>
+                  <td className="px-5 py-4 font-semibold text-slate-900">{formatMoney(product.price)}</td>
+                  <td className="px-5 py-4">
+                    <span className="badge-pill badge-emerald">
+                      {product.stock}
+                    </span>
+                    <div className="mt-2 text-xs text-slate-500">{formatVoltages(getProductVoltages(product))}</div>
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <button type="button" onClick={() => openEditModal(product)} className="text-sm font-medium text-brand-blue">
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(product.id)}
+                        disabled={deletingProductId === product.id}
+                        className="text-sm font-medium text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {deletingProductId === product.id ? "Deleting..." : "Delete"}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
+
+      {meta.totalPages > 1 ? (
+        <div className="mt-6 flex items-center justify-center gap-2">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-sm text-slate-700 disabled:opacity-40 hover:border-brand-blue hover:text-brand-blue"
+          >
+            ‹
+          </button>
+          {Array.from({ length: meta.totalPages }, (_, i) => i + 1).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPage(p)}
+              className={`flex h-9 w-9 items-center justify-center rounded-full border text-sm font-medium transition ${
+                p === page
+                  ? "border-brand-blue bg-brand-blue text-white"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-brand-blue hover:text-brand-blue"
+              }`}
+            >
+              {p}
+            </button>
+          ))}
+          <button
+            onClick={() => setPage((p) => Math.min(meta.totalPages, p + 1))}
+            disabled={page >= meta.totalPages}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-sm text-slate-700 disabled:opacity-40 hover:border-brand-blue hover:text-brand-blue"
+          >
+            ›
+          </button>
+        </div>
+      ) : null}
 
       {open ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-4">
           <div className="flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
             <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
-              <h3 className="font-display text-2xl font-semibold text-slate-900">
+              <h3 className="heading-card">
                 {form.id ? "Edit Product" : "Add New Product"}
               </h3>
               <button type="button" onClick={() => setOpen(false)} className="text-slate-400 transition hover:text-slate-700">

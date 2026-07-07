@@ -111,7 +111,7 @@ export default function AccountProfileForm({ user }) {
   return (
     <div className="section-card">
       <div>
-        <h2 className="heading-section text-2xl">Profile Details</h2>
+        <h2 className="heading-card">Profile Details</h2>
         <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-500">
           Keep your contact and delivery details ready for faster checkout.
         </p>

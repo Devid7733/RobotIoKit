@@ -90,8 +90,7 @@ export default function AdminNotificationsClient() {
     <section className="space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">Admin alerts</p>
-          <h2 className="mt-1 text-2xl font-semibold text-slate-900">Notification list</h2>
+          <p className="admin-kicker">Admin alerts</p>
         </div>
         {unreadCount > 0 ? (
           <button

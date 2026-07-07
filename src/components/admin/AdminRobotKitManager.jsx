@@ -1,7 +1,7 @@
 "use client";
 
 import MediaPicker from "@/components/admin/MediaPicker";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 const levels = ["Beginner", "Intermediate", "Advanced"];
@@ -40,9 +40,12 @@ function levelTone(level) {
   return "badge-level-beginner";
 }
 
-export default function AdminRobotKitManager({ initialRobotKits }) {
-  const [robotKits, setRobotKits] = useState(initialRobotKits);
+export default function AdminRobotKitManager() {
+  const [robotKits, setRobotKits] = useState([]);
+  const [meta, setMeta] = useState({ page: 1, totalPages: 1, total: 0 });
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
     ...emptyForm
   });
@@ -50,18 +53,35 @@ export default function AdminRobotKitManager({ initialRobotKits }) {
   const [submitting, setSubmitting] = useState(false);
   const [deletingKitId, setDeletingKitId] = useState("");
 
-  const filteredRobotKits = useMemo(() => {
-    const search = query.trim().toLowerCase();
-    if (!search) {
-      return robotKits;
+  const fetchRobotKits = useCallback(async (search, currentPage) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ page: String(currentPage) });
+      if (search) params.set("search", search);
+      const res = await fetch(`/api/admin/robot-kits?${params}`);
+      const json = await res.json();
+      if (json.ok) {
+        setRobotKits(json.data);
+        setMeta(json.meta);
+      }
+    } catch {
+      // silent
+    } finally {
+      setLoading(false);
     }
+  }, []);
 
-    return robotKits.filter((kit) =>
-      [kit.name, kit.sku, kit.level]
-        .filter(Boolean)
-        .some((value) => value.toLowerCase().includes(search))
-    );
-  }, [robotKits, query]);
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setPage(1);
+      fetchRobotKits(query, 1);
+    }, 300);
+    return () => clearTimeout(id);
+  }, [query, fetchRobotKits]);
+
+  useEffect(() => {
+    fetchRobotKits(query, page);
+  }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function openCreateModal() {
     setForm(emptyForm);
@@ -110,9 +130,15 @@ export default function AdminRobotKitManager({ initialRobotKits }) {
         throw new Error(result.message || "Unable to save robot kit.");
       }
 
-      setRobotKits((current) => (form.id ? current.map((kit) => (kit.id === form.id ? result.data : kit)) : [result.data, ...current]));
       setOpen(false);
       toast.success(form.id ? "Robot kit updated." : "Robot kit created.");
+
+      if (form.id) {
+        fetchRobotKits(query, page);
+      } else {
+        setPage(1);
+        fetchRobotKits(query, 1);
+      }
     } catch (submitError) {
       toast.error(submitError instanceof Error ? submitError.message : "Unable to save robot kit.");
     } finally {
@@ -139,8 +165,8 @@ export default function AdminRobotKitManager({ initialRobotKits }) {
         throw new Error(result.message || "Unable to delete robot kit.");
       }
 
-      setRobotKits((current) => current.filter((kit) => kit.id !== kitId));
       toast.success("Robot kit deleted.");
+      fetchRobotKits(query, page);
     } catch (deleteError) {
       toast.error(deleteError instanceof Error ? deleteError.message : "Unable to delete robot kit.");
     } finally {
@@ -152,8 +178,8 @@ export default function AdminRobotKitManager({ initialRobotKits }) {
     <section className="surface-card">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h2 className="font-display text-2xl font-semibold text-slate-900">Robot Kits</h2>
-          <p className="mt-2 text-sm text-slate-500">{robotKits.length} kits available</p>
+          <h2 className="heading-card">Robot Kits</h2>
+          <p className="mt-2 text-sm text-slate-500">{meta.total} kits available</p>
         </div>
         <button type="button" onClick={openCreateModal} className="button-blue px-5 py-2.5">
           Add Kit
@@ -170,50 +196,90 @@ export default function AdminRobotKitManager({ initialRobotKits }) {
         />
       </div>
 
-      <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {filteredRobotKits.map((kit) => (
-          <article key={kit.id} className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_16px_32px_rgba(15,23,42,0.05)]">
-            <div className="relative h-56 bg-slate-100">
-              {kit.image ? (
-                <img src={kit.image} alt={kit.name} className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full items-center justify-center text-sm text-slate-400">No image</div>
-              )}
-              <span className={`absolute right-4 top-4 badge-pill ${levelTone(kit.level)}`}>
-                {kit.level}
-              </span>
-            </div>
-            <div className="p-5">
-              <div className="font-semibold text-slate-900">{kit.name}</div>
-              <div className={`mt-2 text-sm font-medium ${Number(kit.stockQuantity || 0) > 0 ? "text-emerald-600" : "text-red-500"}`}>
-                {Number(kit.stockQuantity || 0) > 0 ? `${kit.stockQuantity} in stock` : "Out of stock"}
+      {loading ? (
+        <div className="mt-6 text-center text-slate-400">Loading…</div>
+      ) : robotKits.length === 0 ? (
+        <div className="mt-6 text-center text-slate-400">
+          {query ? `No robot kits found for "${query}"` : "No robot kits yet."}
+        </div>
+      ) : (
+        <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {robotKits.map((kit) => (
+            <article key={kit.id} className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_16px_32px_rgba(15,23,42,0.05)]">
+              <div className="relative h-56 bg-slate-100">
+                {kit.image ? (
+                  <img src={kit.image} alt={kit.name} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-sm text-slate-400">No image</div>
+                )}
+                <span className={`absolute right-4 top-4 badge-pill ${levelTone(kit.level)}`}>
+                  {kit.level}
+                </span>
               </div>
-              <div className="mt-4 flex items-center justify-between">
-                <div className="text-xl font-semibold text-brand-blue">{formatMoney(kit.price)}</div>
-                <div className="flex items-center gap-3">
-                  <button type="button" onClick={() => openEditModal(kit)} className="text-sm font-medium text-brand-blue">
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(kit.id)}
-                    disabled={deletingKitId === kit.id}
-                    className="text-sm font-medium text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {deletingKitId === kit.id ? "Deleting..." : "Delete"}
-                  </button>
+              <div className="p-5">
+                <div className="font-semibold text-slate-900">{kit.name}</div>
+                <div className={`mt-2 text-sm font-medium ${Number(kit.stockQuantity || 0) > 0 ? "text-emerald-600" : "text-red-500"}`}>
+                  {Number(kit.stockQuantity || 0) > 0 ? `${kit.stockQuantity} in stock` : "Out of stock"}
+                </div>
+                <div className="mt-4 flex items-center justify-between">
+                  <div className="text-xl font-semibold text-brand-blue">{formatMoney(kit.price)}</div>
+                  <div className="flex items-center gap-3">
+                    <button type="button" onClick={() => openEditModal(kit)} className="text-sm font-medium text-brand-blue">
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(kit.id)}
+                      disabled={deletingKitId === kit.id}
+                      className="text-sm font-medium text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {deletingKitId === kit.id ? "Deleting..." : "Delete"}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </article>
-        ))}
-      </div>
+            </article>
+          ))}
+        </div>
+      )}
+
+      {meta.totalPages > 1 ? (
+        <div className="mt-6 flex items-center justify-center gap-2">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-sm text-slate-700 disabled:opacity-40 hover:border-brand-blue hover:text-brand-blue"
+          >
+            ‹
+          </button>
+          {Array.from({ length: meta.totalPages }, (_, i) => i + 1).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPage(p)}
+              className={`flex h-9 w-9 items-center justify-center rounded-full border text-sm font-medium transition ${
+                p === page
+                  ? "border-brand-blue bg-brand-blue text-white"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-brand-blue hover:text-brand-blue"
+              }`}
+            >
+              {p}
+            </button>
+          ))}
+          <button
+            onClick={() => setPage((p) => Math.min(meta.totalPages, p + 1))}
+            disabled={page >= meta.totalPages}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-sm text-slate-700 disabled:opacity-40 hover:border-brand-blue hover:text-brand-blue"
+          >
+            ›
+          </button>
+        </div>
+      ) : null}
 
       {open ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-4">
           <div className="flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
             <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
-              <h3 className="font-display text-2xl font-semibold text-slate-900">
+              <h3 className="heading-card">
                 {form.id ? "Edit Robot Kit" : "Add New Robot Kit"}
               </h3>
               <button type="button" onClick={() => setOpen(false)} className="text-slate-400 transition hover:text-slate-700">

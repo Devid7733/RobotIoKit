@@ -81,7 +81,7 @@ export default async function KhqrPage({ searchParams }) {
             </div>
 
             <div className="section-card h-fit">
-              <h2 className="heading-section text-2xl">Automatic Payment Verification</h2>
+              <h2 className="heading-card">Automatic Payment Verification</h2>
               <p className="mt-4 text-sm leading-7 text-slate-600">
                 Scan with ABA, ACLEDA, Wing, Bakong, or any KHQR-supported app. After you pay, we will verify the transaction from Bakong before updating your order.
               </p>

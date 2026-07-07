@@ -3,7 +3,7 @@ import AdminProductManager from "@/components/admin/AdminProductManager";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { requireAdminSession } from "@/lib/adminSession";
-import { listAdminProducts, listProductCategories } from "@/services/productService";
+import { listProductCategories } from "@/services/productService";
 
 export const metadata = {
   title: "Admin Products | RobotIoKit"
@@ -11,17 +11,14 @@ export const metadata = {
 
 export default async function AdminProductsPage() {
   await requireAdminSession();
-  const [products, categories] = await Promise.all([
-    listAdminProducts(),
-    listProductCategories()
-  ]);
+  const categories = await listProductCategories();
 
   return (
     <AdminShell
       sidebar={<AdminSidebar />}
       header={<AdminHeader title="Products" primaryLabel="Manage Categories" primaryHref="/admin/categories" />}
     >
-      <AdminProductManager initialProducts={products} categories={categories} />
+      <AdminProductManager categories={categories} />
     </AdminShell>
   );
 }

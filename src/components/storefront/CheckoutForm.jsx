@@ -154,7 +154,7 @@ export default function CheckoutForm({ initialProfile }) {
         ) : (
           <form onSubmit={submitOrder} className="space-y-6">
             <div className="section-card">
-              <h2 className="heading-section text-2xl">Delivery Information</h2>
+              <h2 className="heading-card">Delivery Information</h2>
               <div className="mt-6 grid gap-4 md:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-700">Full Name</label>
@@ -219,7 +219,7 @@ export default function CheckoutForm({ initialProfile }) {
             </div>
 
             <div ref={fulfillmentRef} tabIndex={-1} className="section-card">
-              <h2 className="heading-section text-2xl">Fulfillment Method</h2>
+              <h2 className="heading-card">Fulfillment Method</h2>
               <div className="mt-5 grid gap-4 md:grid-cols-2">
                 <button
                   type="button"
@@ -269,7 +269,7 @@ export default function CheckoutForm({ initialProfile }) {
             </div>
 
             <div ref={paymentRef} tabIndex={-1} className="section-card">
-              <h2 className="heading-section text-2xl">Payment Method</h2>
+              <h2 className="heading-card">Payment Method</h2>
               <div className="mt-5 grid gap-4 md:grid-cols-2">
                 <button
                   type="button"
@@ -333,7 +333,7 @@ export default function CheckoutForm({ initialProfile }) {
       </section>
 
       <aside className="section-card h-fit">
-        <h2 className="heading-section text-2xl">Order Summary</h2>
+        <h2 className="heading-card">Order Summary</h2>
 
         <div className="mt-6 space-y-3">
           {items.map((item) => (

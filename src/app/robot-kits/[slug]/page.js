@@ -3,9 +3,18 @@ import Image from "next/image";
 import Link from "next/link";
 import AddToCartButton from "@/components/storefront/AddToCartButton";
 import StorefrontShell from "@/components/storefront/StorefrontShell";
-import { getStorefrontRobotKitBySlug } from "@/services/robotKitService";
+import { getStorefrontRobotKitBySlug, listStorefrontRobotKits } from "@/services/robotKitService";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
+
+// Required for ISR on a dynamic segment: without generateStaticParams, Next.js
+// treats this route as fully dynamic (revalidate alone has no effect). Returning
+// every slug here pre-renders each kit page at build time and keeps them
+// cached/revalidated afterward; a slug added later still generates on-demand.
+export async function generateStaticParams() {
+  const kits = await listStorefrontRobotKits();
+  return kits.map((kit) => ({ slug: kit.slug }));
+}
 
 const levelBadgeClass = {
   Beginner: "bg-emerald-100 text-emerald-700",
@@ -40,7 +49,8 @@ function LevelDots({ level }) {
 }
 
 export async function generateMetadata({ params }) {
-  const kit = await getStorefrontRobotKitBySlug(params.slug);
+  const { slug } = await params;
+  const kit = await getStorefrontRobotKitBySlug(slug);
   if (!kit) {
     return { title: "Kit Not Found | RobotIoKit" };
   }
@@ -51,7 +61,8 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function RobotKitDetailPage({ params }) {
-  const kit = await getStorefrontRobotKitBySlug(params.slug);
+  const { slug } = await params;
+  const kit = await getStorefrontRobotKitBySlug(slug);
 
   if (!kit) {
     notFound();
@@ -115,7 +126,7 @@ export default async function RobotKitDetailPage({ params }) {
               <LevelDots level={kit.level} />
             </div>
 
-            <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight text-slate-900">
+            <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
               {kit.name}
             </h1>
 

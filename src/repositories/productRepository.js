@@ -14,11 +14,18 @@ const productWithCategory = {
   category: true
 };
 
-export async function findAdminProducts() {
+export async function findAdminProducts({ where = {}, skip, take } = {}) {
   return prisma.product.findMany({
+    where,
     orderBy: { createdAt: "desc" },
-    include: productWithCategory
+    include: productWithCategory,
+    ...(skip != null ? { skip } : {}),
+    ...(take != null ? { take } : {})
   });
+}
+
+export async function countAdminProducts(where = {}) {
+  return prisma.product.count({ where });
 }
 
 export async function findProductById(id) {

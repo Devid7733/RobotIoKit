@@ -8,10 +8,20 @@ import { AlsoBoughtSkeleton, RelatedProductsSkeleton } from "@/components/ui/ske
 import {
   getAlsoBoughtProducts,
   getCompatibleProducts,
-  getStorefrontProductBySlug
+  getStorefrontProductBySlug,
+  listProductSlugs
 } from "@/services/productService";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
+
+// Required for ISR on a dynamic segment: without generateStaticParams, Next.js
+// treats this route as fully dynamic (revalidate alone has no effect). Returning
+// every slug here pre-renders each product page at build time and keeps them
+// cached/revalidated afterward; a slug added later still generates on-demand.
+export async function generateStaticParams() {
+  const products = await listProductSlugs();
+  return products.map(({ slug }) => ({ slug }));
+}
 
 function buildGallery(product) {
   return [product.image, product.image, product.image, product.image];
@@ -112,7 +122,8 @@ async function CompatibleProducts({ productSlug }) {
 }
 
 export async function generateMetadata({ params }) {
-  const product = await getStorefrontProductBySlug(params.slug);
+  const { slug } = await params;
+  const product = await getStorefrontProductBySlug(slug);
   if (!product) {
     return { title: "Product Not Found | RobotIoKit" };
   }
@@ -123,7 +134,8 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function ProductDetailPage({ params }) {
-  const product = await getStorefrontProductBySlug(params.slug);
+  const { slug } = await params;
+  const product = await getStorefrontProductBySlug(slug);
 
   if (!product) {
     notFound();
@@ -187,7 +199,7 @@ export default async function ProductDetailPage({ params }) {
               {product.category}
             </div>
 
-            <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight text-slate-900">
+            <h1 className="mt-4 font-display text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
               {product.name}
             </h1>
             <div className="mt-4 text-4xl font-bold tracking-tight text-brand-blue sm:text-5xl">

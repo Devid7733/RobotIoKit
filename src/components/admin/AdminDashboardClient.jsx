@@ -41,12 +41,12 @@ function formatLabel(value) {
     .join(" ");
 }
 
-const topMetricConfig = [
-  { title: "Today Sales", icon: "creditCard", iconWrap: "bg-brand-blue text-white", delta: "+12%", valueKey: "todaySales" },
-  { title: "Orders Today", icon: "package", iconWrap: "bg-indigo-500 text-white", delta: "+3", valueKey: "ordersToday", plainNumber: true },
-  { title: "This Week Revenue", icon: "trendUp", iconWrap: "bg-violet-500 text-white", delta: "+8%", valueKey: "weekRevenue" },
-  { title: "This Month Revenue", icon: "calendar", iconWrap: "bg-cyan-500 text-white", delta: "+15%", valueKey: "monthRevenue" }
-];
+const topMetricMeta = {
+  "Total Revenue": { icon: "creditCard", iconWrap: "bg-brand-blue text-white" },
+  Orders: { title: "Total Orders", icon: "package", iconWrap: "bg-indigo-500 text-white" },
+  Products: { title: "Total Products", icon: "cube", iconWrap: "bg-violet-500 text-white" },
+  "Robot Kits": { title: "Total Robot Kits", icon: "bolt", iconWrap: "bg-cyan-500 text-white" }
+};
 
 const secondaryMetricConfig = [
   { title: "Pending Orders", subtitle: "Awaiting fulfillment", icon: "clock", iconWrap: "bg-amber-100 text-amber-500", valueKey: "pendingOrders" },
@@ -82,14 +82,9 @@ function DashboardSkeleton() {
 
 function TopMetricCard({ metric }) {
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
-      <div className="flex items-start justify-between gap-4">
-        <div className={`inline-flex h-12 w-12 flex-none items-center justify-center rounded-xl ${metric.iconWrap}`}>
-          <Icon name={metric.icon} className="h-6 w-6" />
-        </div>
-        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-          ↗ {metric.delta}
-        </span>
+    <article className="surface-card-sm transition hover:shadow-md">
+      <div className={`inline-flex h-12 w-12 flex-none items-center justify-center rounded-xl ${metric.iconWrap}`}>
+        <Icon name={metric.icon} className="h-6 w-6" />
       </div>
       <div className="mt-4">
         <div className="text-sm font-medium text-slate-500">{metric.title}</div>
@@ -101,7 +96,7 @@ function TopMetricCard({ metric }) {
 
 function SecondaryMetricCard({ metric }) {
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
+    <article className="surface-card-sm transition hover:shadow-md">
       <div className="flex items-start gap-4">
         <div className={`inline-flex h-12 w-12 flex-none items-center justify-center rounded-xl ${metric.iconWrap}`}>
           <Icon name={metric.icon} className="h-6 w-6" />
@@ -164,27 +159,19 @@ export default function AdminDashboardClient() {
     return <DashboardSkeleton />;
   }
 
-  const totalRevenue = Number(data.stats.find((item) => item.label === "Total Revenue")?.value || 0);
-  const ordersCount = Number(data.stats.find((item) => item.label === "Orders")?.value || 0);
   const totalProducts = Number(data.stats.find((item) => item.label === "Products")?.value || 0);
   const lowStockAlerts = data.inventoryAlerts.length;
   const outOfStock = data.inventoryAlerts.filter((item) => item.stock <= 0).length;
   const pendingOrders = data.recentOrders.filter((order) => ["PENDING", "PREPARING"].includes(order.status)).length;
 
-  const topMetrics = topMetricConfig.map((metric) => {
-    let value = totalRevenue;
-
-    if (metric.valueKey === "ordersToday") {
-      value = Math.max(ordersCount, data.recentOrders.length);
-    } else if (metric.valueKey === "weekRevenue") {
-      value = totalRevenue;
-    } else if (metric.valueKey === "monthRevenue") {
-      value = totalRevenue;
-    }
+  const topMetrics = data.stats.map((stat) => {
+    const meta = topMetricMeta[stat.label] || { icon: "cube", iconWrap: "bg-slate-500 text-white" };
 
     return {
-      ...metric,
-      value: metric.plainNumber ? String(value) : formatMoney(value)
+      title: meta.title || stat.label,
+      icon: meta.icon,
+      iconWrap: meta.iconWrap,
+      value: stat.label === "Total Revenue" ? formatMoney(stat.value) : String(stat.value)
     };
   });
 
@@ -210,7 +197,7 @@ export default function AdminDashboardClient() {
   return (
     <div className="space-y-7">
       <section>
-        <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Dashboard Overview</h2>
+        <h2 className="heading-card">Dashboard Overview</h2>
         <p className="mt-2 text-sm text-slate-500">Welcome back, Admin. Here's what's happening today.</p>
       </section>
 

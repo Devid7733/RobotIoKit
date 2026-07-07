@@ -1,8 +1,9 @@
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 import { Suspense } from "react";
 import Link from "next/link";
 import Icon from "@/components/common/Icon";
+import HomeMessageBanner from "@/components/storefront/HomeMessageBanner";
 import KitCard from "@/components/storefront/KitCard";
 import ProductCard from "@/components/storefront/ProductCard";
 import StorefrontShell from "@/components/storefront/StorefrontShell";
@@ -133,21 +134,12 @@ async function HomeFeaturedProducts() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default async function HomePage({ searchParams }) {
-  const params = await searchParams;
-  const message = params?.message || "";
-
+export default async function HomePage() {
   return (
     <StorefrontShell>
-      {message ? (
-        <div className="bg-rose-50">
-          <div className="storefront-container py-3">
-            <div className="rounded-2xl border border-rose-200 bg-white px-4 py-3 text-sm font-semibold text-rose-700">
-              {message}
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <Suspense fallback={null}>
+        <HomeMessageBanner />
+      </Suspense>
       <section
         className="relative overflow-hidden bg-brand-dark text-white"
         style={{

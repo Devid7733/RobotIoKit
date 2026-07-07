@@ -170,7 +170,7 @@ export default function AdminOrdersClient() {
       <div className="surface-card">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h2 className="font-display text-2xl font-semibold text-slate-900">Orders</h2>
+            <h2 className="heading-card">Orders</h2>
             <p className="mt-2 text-sm text-slate-500">{filteredOrders.length} orders in the current view</p>
           </div>
           {savingId ? <div className="text-sm font-medium text-brand-blue">Saving changes...</div> : null}

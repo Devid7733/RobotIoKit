@@ -18,6 +18,19 @@ function formatLabel(value) {
     .join(" ");
 }
 
+function orderTone(status) {
+  if (status === "COMPLETED") return "badge-soft badge-emerald";
+  if (status === "SHIPPED") return "badge-soft badge-blue";
+  if (status === "CANCELLED") return "badge-soft badge-rose";
+  return "badge-soft badge-amber";
+}
+
+function paymentTone(status) {
+  if (status === "PAID") return "badge-soft badge-emerald";
+  if (status === "FAILED" || status === "EXPIRED") return "badge-soft badge-rose";
+  return "badge-soft badge-amber";
+}
+
 export async function generateMetadata({ params }) {
   return {
     title: "Order Detail | RobotIoKit"
@@ -62,11 +75,11 @@ export default async function OrderDetailPage({ params }) {
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <div className="badge-soft badge-blue">
-                {order.status}
+              <div className={orderTone(order.status)}>
+                {formatLabel(order.status)}
               </div>
-              <div className="badge-soft badge-orange">
-                {order.payment?.status || "UNPAID"} / {order.paymentMethod}
+              <div className={paymentTone(order.payment?.status || "UNPAID")}>
+                {formatLabel(order.payment?.status || "UNPAID")} / {formatLabel(order.paymentMethod)}
               </div>
             </div>
           </div>
@@ -74,7 +87,7 @@ export default async function OrderDetailPage({ params }) {
 
         <section className="mt-8 grid gap-8 xl:grid-cols-[1.05fr,0.95fr]">
           <div className="section-card">
-            <h2 className="heading-section text-2xl">Items</h2>
+            <h2 className="heading-card">Items</h2>
             <div className="mt-6 space-y-4">
               {order.items.map((item) => (
                 <div
@@ -99,7 +112,7 @@ export default async function OrderDetailPage({ params }) {
 
           <div className="space-y-8">
             <div className="section-card">
-              <h2 className="heading-section text-2xl">Delivery</h2>
+              <h2 className="heading-card">Delivery</h2>
               <div className="mt-6 space-y-4 text-sm text-slate-600">
                 <div className="rounded-2xl bg-slate-50 px-5 py-4">
                   <div className="text-xs uppercase tracking-[0.14em] text-slate-400">Recipient</div>
@@ -123,7 +136,7 @@ export default async function OrderDetailPage({ params }) {
             </div>
 
             <div className="section-card">
-              <h2 className="heading-section text-2xl">Summary</h2>
+              <h2 className="heading-card">Summary</h2>
               <div className="mt-6 space-y-4 text-sm text-slate-600">
                 <div className="flex items-center justify-between">
                   <span>Subtotal</span>
@@ -147,7 +160,7 @@ export default async function OrderDetailPage({ params }) {
             </div>
 
             <div className="section-card">
-              <h2 className="heading-section text-2xl">Order Timeline</h2>
+              <h2 className="heading-card">Order Timeline</h2>
               <div className="mt-6 space-y-4">
                 {order.timeline?.length ? (
                   order.timeline.map((entry) => (

@@ -1,20 +1,39 @@
+"use client";
+
+import Link from "next/link";
+import { useSession } from "next-auth/react";
 import AdminHeaderBadges from "@/components/admin/AdminHeaderBadges";
+import { getInitials } from "@/lib/userDisplay";
 
 export default function AdminHeader({
-  title = "Dashboard"
+  title = "Dashboard",
+  primaryLabel,
+  primaryHref
 }) {
+  const { data: session } = useSession();
+  const displayName = session?.user?.name || session?.user?.email || "Admin";
+
   return (
     <div className="flex items-center justify-between px-6 py-3 sm:px-8">
-      <h1 className="text-3xl font-semibold tracking-tight text-slate-900">{title}</h1>
+      <h1 className="font-display text-3xl font-semibold tracking-tight text-slate-900">{title}</h1>
       <div className="flex items-center gap-5">
+        {primaryLabel && primaryHref ? (
+          <Link href={primaryHref} className="button-secondary px-4 py-2.5 text-sm">
+            {primaryLabel}
+          </Link>
+        ) : null}
         <AdminHeaderBadges />
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-blue text-base font-semibold text-white">
-            A
-          </div>
+          {session?.user?.avatarUrl ? (
+            <img src={session.user.avatarUrl} alt="" className="h-11 w-11 rounded-full object-cover" />
+          ) : (
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-blue text-base font-semibold text-white">
+              {getInitials(session?.user || {})}
+            </div>
+          )}
           <div className="hidden sm:block">
-            <div className="text-base font-semibold text-slate-900">Admin</div>
-            <div className="text-sm text-slate-500">admin@robotiokit.com</div>
+            <div className="text-base font-semibold text-slate-900">{displayName}</div>
+            <div className="text-sm text-slate-500">{session?.user?.email || ""}</div>
           </div>
         </div>
       </div>

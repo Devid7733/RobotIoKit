@@ -46,6 +46,7 @@ export const authOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
+          avatarUrl: user.avatarUrl || null,
           guestSessionId: credentials.guestSessionId || null
         };
       }
@@ -62,12 +63,17 @@ export const authOptions = {
 
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.userId = user.id;
         token.role = user.role;
         token.email = user.email;
         token.name = user.name;
+        token.avatarUrl = user.avatarUrl || null;
+      }
+
+      if (trigger === "update" && session?.avatarUrl !== undefined) {
+        token.avatarUrl = session.avatarUrl;
       }
 
       return token;
@@ -78,6 +84,7 @@ export const authOptions = {
         session.user.role = token.role;
         session.user.email = token.email;
         session.user.name = token.name;
+        session.user.avatarUrl = token.avatarUrl || null;
       }
 
       return session;

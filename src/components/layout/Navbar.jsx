@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
 import Icon from "@/components/common/Icon";
 import { useCart } from "@/components/storefront/CartProvider";
+import { getInitials } from "@/lib/userDisplay";
 
 function Logo() {
   return (
@@ -176,19 +177,32 @@ export default function Navbar({ categories = [] }) {
                 onClick={() => setIsUserMenuOpen((value) => !value)}
                 className="flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3 py-2 transition hover:bg-white/12"
               >
-                <Icon name="user" className="h-6 w-6" />
+                {session?.user ? (
+                  session.user.avatarUrl ? (
+                    <img src={session.user.avatarUrl} alt="" className="h-6 w-6 rounded-full object-cover" />
+                  ) : (
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-[11px] font-bold text-white">
+                      {getInitials(session.user)}
+                    </span>
+                  )
+                ) : (
+                  <Icon name="user" className="h-6 w-6" />
+                )}
                 {session?.user ? <span className="hidden max-w-24 truncate text-sm font-semibold sm:block">{displayName}</span> : null}
               </button>
               {isUserMenuOpen ? (
                 <div className="absolute right-0 top-14 w-64 rounded-[24px] border border-slate-200 bg-white p-5 text-slate-700 shadow-2xl">
                   {session?.user ? (
                     <>
-                      <div className="border-b border-slate-200 pb-4">
-                        <div className="text-sm text-slate-500">Signed in as</div>
-                        <div className="mt-1 break-all text-lg font-semibold text-slate-900">{displayName}</div>
-                        {session.user.email && displayName !== session.user.email ? (
-                          <div className="mt-1 break-all text-sm text-slate-500">{session.user.email}</div>
-                        ) : null}
+                      <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
+                        {session.user.avatarUrl ? (
+                          <img src={session.user.avatarUrl} alt="" className="h-12 w-12 shrink-0 rounded-full object-cover" />
+                        ) : (
+                          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-blue text-base font-semibold text-white">
+                            {getInitials(session.user)}
+                          </span>
+                        )}
+                        <div className="min-w-0 break-all text-lg font-semibold text-slate-900">{displayName}</div>
                       </div>
                       <div className="mt-4 space-y-2">
                         {isAdmin ? (

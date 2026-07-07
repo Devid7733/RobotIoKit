@@ -214,7 +214,7 @@ export default function AdminOrderDetailClient({ orderId }) {
         <div className="space-y-6">
           <div className="surface-card">
             <div className="flex items-center justify-between">
-              <h3 className="font-display text-2xl font-semibold text-slate-900">Customer & Fulfillment</h3>
+              <h3 className="heading-card">Customer & Fulfillment</h3>
               {saving ? <span className="text-sm text-brand-blue">Saving...</span> : null}
             </div>
 
@@ -336,7 +336,7 @@ export default function AdminOrderDetailClient({ orderId }) {
           </div>
 
           <div className="surface-card">
-            <h3 className="font-display text-2xl font-semibold text-slate-900">Order Items</h3>
+            <h3 className="heading-card">Order Items</h3>
             <div className="mt-6 space-y-3">
               {order.items.map((item) => (
                 <div key={item.id} className="surface-outline flex items-center justify-between bg-white">
@@ -356,7 +356,7 @@ export default function AdminOrderDetailClient({ orderId }) {
 
         <div className="space-y-6">
           <div className="surface-card">
-            <h3 className="font-display text-2xl font-semibold text-slate-900">Summary</h3>
+            <h3 className="heading-card">Summary</h3>
             <div className="mt-6 space-y-3 text-sm">
               <div className="flex items-center justify-between text-slate-500">
                 <span>Subtotal</span>
@@ -374,7 +374,7 @@ export default function AdminOrderDetailClient({ orderId }) {
           </div>
 
           <div className="surface-card">
-            <h3 className="font-display text-2xl font-semibold text-slate-900">Payment</h3>
+            <h3 className="heading-card">Payment</h3>
             <div className="mt-6 space-y-3 text-sm text-slate-500">
               <div className="flex items-center justify-between">
                 <span>Method</span>
@@ -415,7 +415,7 @@ export default function AdminOrderDetailClient({ orderId }) {
           </div>
 
           <div className="surface-card">
-            <h3 className="font-display text-2xl font-semibold text-slate-900">Fulfillment Timeline</h3>
+            <h3 className="heading-card">Fulfillment Timeline</h3>
             <div className="mt-6 space-y-4">
               {order.timeline?.length ? (
                 order.timeline.map((entry) => (

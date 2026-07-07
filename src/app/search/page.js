@@ -149,7 +149,7 @@ export default async function SearchPage({ searchParams }) {
               <Icon name="search" className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="font-display text-4xl font-semibold tracking-tight text-slate-900">Store Search</h1>
+              <h1 className="font-display text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">Store Search</h1>
               {query ? (
                 <p className="mt-3 text-base text-slate-500">
                   {totalResults} result{totalResults === 1 ? "" : "s"} for <span className="font-semibold text-slate-900">&quot;{query}&quot;</span>
@@ -191,7 +191,7 @@ export default async function SearchPage({ searchParams }) {
               {products.length ? (
                 <section>
                   <div className="mb-4 flex items-center justify-between gap-3">
-                    <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Products</h2>
+                    <h2 className="heading-card">Products</h2>
                     <Link href={`/products?search=${encodeURIComponent(query)}`} className="text-sm font-semibold text-brand-blue hover:text-brand-blue/80">
                       View product results
                     </Link>
@@ -207,7 +207,7 @@ export default async function SearchPage({ searchParams }) {
               {robotKits.length ? (
                 <section className={products.length ? "mt-10" : ""}>
                   <div className="mb-4 flex items-center justify-between gap-3">
-                    <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Robot Kits</h2>
+                    <h2 className="heading-card">Robot Kits</h2>
                     <Link href={`/robot-kits?search=${encodeURIComponent(query)}`} className="text-sm font-semibold text-brand-blue hover:text-brand-blue/80">
                       View kit results
                     </Link>

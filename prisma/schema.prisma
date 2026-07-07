@@ -92,6 +92,8 @@ model Product {
   orderItems     OrderItem[]
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
+
+  @@index([categoryId])
 }
 
 model RobotKit {
@@ -160,6 +162,9 @@ model Order {
   timeline            OrderTimeline[]
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
+
+  @@index([userId])
+  @@index([status])
 }
 
 model OrderItem {
@@ -186,6 +191,8 @@ model Payment {
   order            Order         @relation(fields: [orderId], references: [id])
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
+
+  @@index([status])
 }
 
 model OrderTimeline {

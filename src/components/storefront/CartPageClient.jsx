@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
+import { toast } from "sonner";
 import Icon from "@/components/common/Icon";
 import { useCart } from "@/components/storefront/CartProvider";
 
@@ -10,9 +12,40 @@ function formatMoney(value) {
 
 export default function CartPageClient() {
   const { items, isReady, subtotal, itemCount, updateQuantity, removeItem } = useCart();
+  const [pendingAction, setPendingAction] = useState("");
 
   if (!isReady) {
     return <div className="section-card">Loading cart...</div>;
+  }
+
+  async function handleQuantityChange(item, nextQty) {
+    if (nextQty < 1) {
+      return;
+    }
+
+    const key = `${item.cartItemId}:qty`;
+    setPendingAction(key);
+
+    try {
+      await updateQuantity(item.cartItemId, nextQty);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to update quantity.");
+    } finally {
+      setPendingAction("");
+    }
+  }
+
+  async function handleRemove(item) {
+    const key = `${item.cartItemId}:remove`;
+    setPendingAction(key);
+
+    try {
+      await removeItem(item.cartItemId);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to remove item.");
+    } finally {
+      setPendingAction("");
+    }
   }
 
   return (
@@ -20,7 +53,7 @@ export default function CartPageClient() {
       <section className="section-card">
         <h1 className="page-title mt-0">Your shopping cart</h1>
         <p className="mt-3 text-sm leading-7 text-slate-500 sm:text-base">
-          Shared cart state is now persisted locally and used across product detail, cart, and checkout.
+          Review your items before heading to checkout.
         </p>
 
         {items.length === 0 ? (
@@ -54,16 +87,18 @@ export default function CartPageClient() {
                     <div className="mt-3 flex items-center gap-2">
                       <button
                         type="button"
-                      onClick={() => updateQuantity(item.cartItemId, item.qty - 1)}
-                        className="rounded-lg border border-slate-200 px-3 py-1"
+                        onClick={() => handleQuantityChange(item, item.qty - 1)}
+                        disabled={item.qty <= 1 || pendingAction === `${item.cartItemId}:qty`}
+                        className="rounded-xl border border-slate-200 px-3 py-1 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         -
                       </button>
                       <span className="min-w-8 text-center text-sm font-semibold">{item.qty}</span>
                       <button
                         type="button"
-                      onClick={() => updateQuantity(item.cartItemId, item.qty + 1)}
-                        className="rounded-lg border border-slate-200 px-3 py-1"
+                        onClick={() => handleQuantityChange(item, item.qty + 1)}
+                        disabled={pendingAction === `${item.cartItemId}:qty`}
+                        className="rounded-xl border border-slate-200 px-3 py-1 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         +
                       </button>
@@ -76,8 +111,9 @@ export default function CartPageClient() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => removeItem(item.cartItemId)}
-                    className="rounded-full border border-slate-200 p-2 text-slate-500"
+                    onClick={() => handleRemove(item)}
+                    disabled={pendingAction === `${item.cartItemId}:remove`}
+                    className="rounded-full border border-slate-200 p-2 text-slate-500 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <Icon name="trash" className="h-4 w-4" />
                   </button>
@@ -89,7 +125,7 @@ export default function CartPageClient() {
       </section>
 
       <aside className="section-card h-fit">
-        <h2 className="heading-section text-2xl">Summary</h2>
+        <h2 className="heading-card">Summary</h2>
         <div className="mt-6 space-y-4 text-sm text-slate-600">
           <div className="flex items-center justify-between">
             <span>Items</span>
