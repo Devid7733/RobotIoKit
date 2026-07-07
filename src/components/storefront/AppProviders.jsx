@@ -10,7 +10,7 @@ export default function AppProviders({ children }) {
     <SessionProvider>
       <CartProvider>{children}</CartProvider>
       <Toaster
-        position="top-right"
+        position="top-center"
         toastOptions={{
           unstyled: true,
           classNames: {

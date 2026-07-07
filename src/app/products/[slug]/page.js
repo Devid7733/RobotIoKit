@@ -24,7 +24,7 @@ export async function generateStaticParams() {
 }
 
 function buildGallery(product) {
-  return [product.image, product.image, product.image, product.image];
+  return [product.image, ...(product.images || [])].filter(Boolean);
 }
 
 function categoryHref(categoryName) {
@@ -182,16 +182,18 @@ export default async function ProductDetailPage({ params }) {
                 className="object-cover"
               />
             </div>
-            <div className="mt-4 grid grid-cols-4 gap-3">
-              {gallery.map((image, index) => (
-                <div
-                  key={`${image}-${index}`}
-                  className="relative h-16 overflow-hidden rounded-xl border border-slate-200 shadow-[0_8px_20px_rgba(15,23,42,0.05)] sm:h-20"
-                >
-                  <Image src={image} alt={`${product.name} thumbnail ${index + 1}`} fill sizes="120px" className="object-cover" />
-                </div>
-              ))}
-            </div>
+            {gallery.length > 1 ? (
+              <div className="mt-4 grid grid-cols-4 gap-3">
+                {gallery.map((image, index) => (
+                  <div
+                    key={`${image}-${index}`}
+                    className="relative h-16 overflow-hidden rounded-xl border border-slate-200 shadow-[0_8px_20px_rgba(15,23,42,0.05)] sm:h-20"
+                  >
+                    <Image src={image} alt={`${product.name} thumbnail ${index + 1}`} fill sizes="120px" className="object-cover" />
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </div>
 
           <div className="pt-1">

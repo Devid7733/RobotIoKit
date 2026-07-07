@@ -287,7 +287,8 @@ function mapProductRecord(product) {
     voltages,
     voltage: formatVoltageLabel(voltages),
     imageUrl: product.imageUrl || null,
-    image: product.imageUrl || null
+    image: product.imageUrl || null,
+    images: Array.isArray(product.images) ? product.images : []
   };
 }
 
@@ -308,6 +309,7 @@ function toProductWriteData(input) {
     price: Number(input.price),
     stock: Number(input.stock ?? 0),
     imageUrl: input.imageUrl ?? input.image ?? null,
+    images: Array.isArray(input.images) ? input.images.filter(Boolean) : undefined,
     voltages,
     voltage: voltages === undefined ? undefined : formatVoltageLabel(voltages),
     badge: Object.prototype.hasOwnProperty.call(input, "badge") ? input.badge || null : undefined,

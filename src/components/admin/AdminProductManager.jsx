@@ -17,6 +17,7 @@ const emptyForm = {
   stock: "",
   voltages: [],
   image: "",
+  images: [],
   description: "",
   featured: false
 };
@@ -140,6 +141,7 @@ export default function AdminProductManager({ categories }) {
       stock: String(product.stock ?? 0),
       voltages: getProductVoltages(product),
       image: product.image || "",
+      images: Array.isArray(product.images) ? product.images : [],
       description: product.description || "",
       featured: Boolean(product.featured)
     });
@@ -560,6 +562,40 @@ export default function AdminProductManager({ categories }) {
                 value={form.image}
                 onChange={(image) => setForm((current) => ({ ...current, image }))}
               />
+
+              <div className="grid gap-2 text-sm font-medium text-slate-700">
+                <div>Additional Photos (optional)</div>
+                {form.images.length ? (
+                  <div className="flex flex-wrap gap-3">
+                    {form.images.map((photo, index) => (
+                      <div key={`${photo}-${index}`} className="relative h-20 w-20 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+                        <img src={photo} alt={`Additional photo ${index + 1}`} className="h-full w-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setForm((current) => ({
+                              ...current,
+                              images: current.images.filter((_, photoIndex) => photoIndex !== index)
+                            }))
+                          }
+                          className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900/70 text-xs text-white transition hover:bg-red-500"
+                          aria-label={`Remove additional photo ${index + 1}`}
+                        >
+                          x
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+                <MediaPicker
+                  label="Add Photo"
+                  value=""
+                  onChange={(photo) => {
+                    if (!photo) return;
+                    setForm((current) => ({ ...current, images: [...current.images, photo] }));
+                  }}
+                />
+              </div>
 
               <label className="grid gap-2 text-sm font-medium text-slate-700">
                 Description
