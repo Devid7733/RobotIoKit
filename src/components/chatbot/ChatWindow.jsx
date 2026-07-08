@@ -326,6 +326,22 @@ function RecommendationList({ items, onProjectSelect }) {
   );
 }
 
+function BuildSummaryBanner({ summary, language }) {
+  if (!summary || summary.totalPrice === null || summary.totalPrice === undefined) {
+    return null;
+  }
+
+  return (
+    <div className="mt-3 rounded-2xl border border-blue-100 bg-blue-50/60 px-4 py-3 text-xs leading-5">
+      <div className="flex items-center justify-between font-semibold text-slate-900">
+        <span>{language === "km" ? "ថ្លៃសរុបប្រហាក់ប្រហែល" : "Estimated build total"}</span>
+        <span className="text-brand-blue">{formatPrice(summary.totalPrice)}</span>
+      </div>
+      {summary.voltageWarning ? <div className="mt-2 font-medium text-amber-700">{summary.voltageWarning}</div> : null}
+    </div>
+  );
+}
+
 function TypingIndicator() {
   return (
     <div className="mr-10 rounded-2xl border border-slate-200/80 bg-white px-4 py-3.5 shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
@@ -479,6 +495,7 @@ export default function ChatWindow({ onClose }) {
       let buffer = "";
       let botItems = [];
       let botLanguage = language;
+      let botBuildSummary = null;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -496,6 +513,7 @@ export default function ChatWindow({ onClose }) {
             if (event.type === "meta") {
               botItems = event.items || [];
               botLanguage = event.language || language;
+              botBuildSummary = event.buildSummary || null;
               setLanguage(botLanguage);
               const catalogItems = botItems.filter((item) => item.type !== "project");
               if (catalogItems.length) {
@@ -510,7 +528,8 @@ export default function ChatWindow({ onClose }) {
                     ...last,
                     content: last.content + event.delta,
                     items: botItems,
-                    language: botLanguage
+                    language: botLanguage,
+                    buildSummary: botBuildSummary
                   };
                 }
                 return updated;
@@ -635,6 +654,8 @@ export default function ChatWindow({ onClose }) {
               ) : null}
 
               {item.items?.length ? <RecommendationList items={item.items} onProjectSelect={submitMessage} /> : null}
+
+              {item.buildSummary ? <BuildSummaryBanner summary={item.buildSummary} language={item.language} /> : null}
 
               {hasNoMatches ? (
                 <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-white px-3 py-3 text-xs leading-5 text-slate-500">

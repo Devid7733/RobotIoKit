@@ -672,7 +672,7 @@ function getProjectCompatibilityTerms(projectType) {
   return [];
 }
 
-const ROBOT_CAR_BUILD_GROUPS = [
+const CORE_BUILD_GROUPS = [
   {
     group: "Controller",
     missing: "Controller",
@@ -715,14 +715,60 @@ const ROBOT_CAR_BUILD_GROUPS = [
     missing: "Wiring/Prototyping",
     matcher: isRobotCarWiring,
     prefer: ["jumper", "breadboard"]
-  },
-  {
-    group: "Optional Sensor",
-    missing: "Optional Sensor",
-    matcher: isRobotCarOptionalSensor,
-    prefer: ["ultrasonic", "hc-sr04", "ir sensor"]
   }
 ];
+
+// Voltage-sensitive roles that must actually agree on a supply voltage —
+// Chassis/Wheels/Wiring/Sensor don't participate in the power rail.
+const VOLTAGE_SENSITIVE_BUILD_GROUPS = ["Controller", "Motor Driver", "Motors", "Power"];
+
+const BUILD_GROUPS_BY_PROJECT_TYPE = {
+  "robot car": [
+    ...CORE_BUILD_GROUPS,
+    {
+      group: "Optional Sensor",
+      missing: "Optional Sensor",
+      matcher: isRobotCarOptionalSensor,
+      prefer: ["ultrasonic", "hc-sr04", "ir sensor"]
+    }
+  ],
+  "obstacle avoiding": [
+    ...CORE_BUILD_GROUPS,
+    {
+      group: "Obstacle Sensor",
+      missing: "Obstacle Sensor",
+      matcher: isRobotCarOptionalSensor,
+      prefer: ["ultrasonic", "hc-sr04", "ir sensor"]
+    }
+  ],
+  "line follower": [
+    ...CORE_BUILD_GROUPS,
+    {
+      group: "Line Sensor",
+      missing: "Line Sensor",
+      matcher: isLineFollowerSensor,
+      prefer: ["tcrt5000", "line tracking", "line sensor"]
+    }
+  ]
+};
+
+const BUILD_SET_LABEL_TEXT = {
+  "robot car": {
+    en: "Here is a complete robot car build set using real catalog items, preferring in-stock products.",
+    km: "នេះជាបញ្ជីគ្រឿងបន្លាស់ពេញលេញសម្រាប់ធ្វើឡានរ៉ូបូត ដោយប្រើទំនិញពិតក្នុង catalog និងផ្តល់អាទិភាពដល់ទំនិញមានក្នុងស្តុក។",
+    label: "complete robot car build set"
+  },
+  "line follower": {
+    en: "Here is a complete line-following robot build set using real catalog items, preferring in-stock products.",
+    km: "នេះជាបញ្ជីគ្រឿងបន្លាស់ពេញលេញសម្រាប់ធ្វើឡានតាមបន្ទាត់ ដោយប្រើទំនិញពិតក្នុង catalog និងផ្តល់អាទិភាពដល់ទំនិញមានក្នុងស្តុក។",
+    label: "complete line-following robot build set"
+  },
+  "obstacle avoiding": {
+    en: "Here is a complete obstacle-avoiding robot build set using real catalog items, preferring in-stock products.",
+    km: "នេះជាបញ្ជីគ្រឿងបន្លាស់ពេញលេញសម្រាប់ធ្វើឡានចៀសវាងរបាំង ដោយប្រើទំនិញពិតក្នុង catalog និងផ្តល់អាទិភាពដល់ទំនិញមានក្នុងស្តុក។",
+    label: "complete obstacle-avoiding robot build set"
+  }
+};
 
 const ROBOT_PROJECT_CARD_DEFINITIONS = [
   {
@@ -830,6 +876,15 @@ function isRobotCarOptionalSensor(product) {
   );
 }
 
+function isLineFollowerSensor(product) {
+  const text = getRobotCarRoleText(product);
+
+  return (
+    includesAnyTerm(text, ["tcrt5000", "line tracking", "line sensor", "ir reflectance"]) &&
+    !includesAnyTerm(text, ["soil moisture", "temperature", "humidity", "dht11", "dht22"])
+  );
+}
+
 function scoreBuildGroupProduct(product, groupConfig) {
   const text = getSearchableText(product);
   const name = normalizeText(product.name);
@@ -863,12 +918,12 @@ function scoreBuildGroupProduct(product, groupConfig) {
   return score;
 }
 
-function buildCompleteRobotCarItems(products, language = "en") {
+function buildCompleteRobotCarItems(products, groups, language = "en") {
   const items = [];
   const missingGroups = [];
   const usedProductIds = new Set();
 
-  for (const groupConfig of ROBOT_CAR_BUILD_GROUPS) {
+  for (const groupConfig of groups) {
     const match = products
       .filter((product) => !usedProductIds.has(product.id || product.slug || product.name))
       .map((product) => ({
@@ -903,7 +958,30 @@ function buildCompleteRobotCarItems(products, language = "en") {
     );
   }
 
-  return { items, missingGroups };
+  const pricedItems = items.filter((item) => item.price !== null && item.price !== undefined);
+  const totalPrice = pricedItems.length ? pricedItems.reduce((sum, item) => sum + item.price, 0) : null;
+
+  return { items, missingGroups, totalPrice };
+}
+
+function getBuildVoltageWarning(items, language = "en") {
+  const relevant = items.filter((item) => VOLTAGE_SENSITIVE_BUILD_GROUPS.includes(item.group) && item.voltages?.length);
+
+  if (relevant.length < 2) {
+    return null;
+  }
+
+  const sharedVoltage = relevant[0].voltages.filter((voltage) => relevant.every((item) => item.voltages.includes(voltage)));
+
+  if (sharedVoltage.length) {
+    return null;
+  }
+
+  const detail = relevant.map((item) => `${item.group} (${item.voltages.join("/")})`).join(", ");
+
+  return language === "km"
+    ? `ចំណាំ៖ គ្រឿងបន្លាស់ទាំងនេះអាចនឹងមិនប្រើវ៉ូល​ដូចគ្នា សូមពិនិត្យមុនទិញ៖ ${detail}។`
+    : `Note: these parts may not share a common voltage — please double-check before buying: ${detail}.`;
 }
 
 function normalizeCatalogItem(item, type, reasonCodes, language = "en", options = {}) {
@@ -1025,7 +1103,7 @@ function scoreCatalogItem(item, parsedQuery, type, compatibilityKeywords = []) {
     reasonCodes.push("projectType");
   }
 
-  if (item.featured || item.badge === "Featured") {
+  if (item.featured) {
     score += 1;
     reasonCodes.push("featured");
   }
@@ -2931,24 +3009,25 @@ export async function searchCatalogForChat(input, parsedQuery, language = "en") 
   }
 
   if (parsedQuery.intent === "complete_build") {
-    const { items, missingGroups } = buildCompleteRobotCarItems(buildableProducts, language);
+    const buildProjectType = parsedQuery.completeBuildProjectType || "robot car";
+    const groups = BUILD_GROUPS_BY_PROJECT_TYPE[buildProjectType] || BUILD_GROUPS_BY_PROJECT_TYPE["robot car"];
+    const buildText = BUILD_SET_LABEL_TEXT[buildProjectType] || BUILD_SET_LABEL_TEXT["robot car"];
+    const { items, missingGroups, totalPrice } = buildCompleteRobotCarItems(buildableProducts, groups, language);
     const missingText = missingGroups.map((group) => `I cannot find a suitable ${group} in the current catalog.`);
     const prefix =
       language === "km"
-        ? [
-            "នេះជាបញ្ជីគ្រឿងបន្លាស់ពេញលេញសម្រាប់ធ្វើឡានរ៉ូបូត ដោយប្រើទំនិញពិតក្នុង catalog និងផ្តល់អាទិភាពដល់ទំនិញមានក្នុងស្តុក។",
-            ...missingText
-          ].join(" ")
-        : [
-            "Here is a complete robot car build set using real catalog items, preferring in-stock products.",
-            ...missingText
-          ].join(" ");
+        ? [buildText.km, ...missingText].join(" ")
+        : [buildText.en, ...missingText].join(" ");
 
     return {
       items,
       followUps: getRobotCarBuildFollowUps(language),
       prefix,
-      label: "complete robot car build set"
+      label: buildText.label,
+      buildSummary: {
+        totalPrice,
+        voltageWarning: getBuildVoltageWarning(items, language)
+      }
     };
   }
 
@@ -3489,7 +3568,7 @@ function getPlannerEntrySortValue(entry, sortBy = "name") {
   }
 
   if (sortBy === "popularity") {
-    return Number(entry.item.featured || entry.item.badge === "Featured" ? 100 : 0) + Number(getCatalogStock(entry.item, entry.type) || 0);
+    return Number(entry.item.featured ? 100 : 0) + Number(getCatalogStock(entry.item, entry.type) || 0);
   }
 
   return String(entry.item.name || "");
@@ -4062,7 +4141,8 @@ async function getRuleBasedCatalogData(input, parsedQuery, language = "en") {
     followUps: catalogSearch.followUps,
     catalogSummary: catalogSearch.items.length ? buildCatalogGroundingSummary(catalogSearch.label, catalogSearch.items) : null,
     modelPrompt: catalogSearch.modelPrompt || null,
-    responseMode: catalogSearch.responseMode || null
+    responseMode: catalogSearch.responseMode || null,
+    buildSummary: catalogSearch.buildSummary || null
   };
 }
 

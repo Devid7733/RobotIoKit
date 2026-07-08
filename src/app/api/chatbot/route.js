@@ -195,7 +195,8 @@ export async function POST(request) {
           followUps: FIXED_FOLLOW_UPS,
           locationLink: chatbotReply.locationLink || "",
           news: chatbotReply.newsItems || [],
-          language: chatbotReply.language
+          language: chatbotReply.language,
+          buildSummary: chatbotReply.buildSummary || null
         });
 
         if (isChatbotAiEnabled() && chatbotReply.modelPrompt) {

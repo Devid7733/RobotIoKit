@@ -6,6 +6,7 @@ import {
   deleteProduct as deleteProductRecord,
   findAdminProducts,
   findAlsoBoughtProducts,
+  findBestSellerProductIds,
   findFeaturedProducts,
   findNewArrivalsProducts,
   findCompatibleProductCandidates,
@@ -275,6 +276,22 @@ function normalizeSpecifications(value, product) {
   return fallbackItems;
 }
 
+const EMPTY_BEST_SELLER_IDS = new Set();
+
+// Real sales data changes slowly enough that a 5-minute-stale ranking is fine,
+// and it avoids re-running the groupBy aggregate on every product-list request.
+// unstable_cache round-trips its return value through JSON, so it must cache
+// a plain array — a Set would silently come back as "{}" on every read.
+const getCachedBestSellerProductIds = unstable_cache(
+  async () => findBestSellerProductIds(),
+  ["best-seller-product-ids"],
+  { revalidate: 300 }
+);
+
+export async function getBestSellerProductIds() {
+  return new Set(await getCachedBestSellerProductIds());
+}
+
 function mapProductRecord(product) {
   if (!product) {
     return null;
@@ -324,7 +341,7 @@ function toProductWriteData(input) {
   };
 }
 
-export function enrichProduct(product) {
+export function enrichProduct(product, bestSellerIds = EMPTY_BEST_SELLER_IDS) {
   const mappedProduct = mapProductRecord(product);
   const image = mappedProduct.imageUrl || getDefaultProductImage(mappedProduct.slug);
   const categoryName = getCategoryName(mappedProduct.category);
@@ -336,7 +353,7 @@ export function enrichProduct(product) {
     voltage: mappedProduct.voltage || null,
     description: mappedProduct.description || "",
     category: categoryName,
-    badge: mappedProduct.badge || (mappedProduct.featured ? "Featured" : "Popular"),
+    badge: bestSellerIds.has(mappedProduct.id) ? "Best Seller" : mappedProduct.badge || null,
     overview: mappedProduct.overview || mappedProduct.description || "",
     features: normalizeStringList(mappedProduct.features, [
       "Project ready",
@@ -452,8 +469,11 @@ export async function deleteProduct(id) {
 // so different filters/pages get their own entries automatically.
 const getCachedStorefrontProducts = unstable_cache(
   async (categorySlug, voltage, search, maxPrice, minPrice, inStock) => {
-    const products = await findStorefrontProducts(categorySlug, voltage, search, maxPrice, minPrice, inStock);
-    return products.map(enrichProduct);
+    const [products, bestSellerIds] = await Promise.all([
+      findStorefrontProducts(categorySlug, voltage, search, maxPrice, minPrice, inStock),
+      getBestSellerProductIds()
+    ]);
+    return products.map((product) => enrichProduct(product, bestSellerIds));
   },
   ["storefront-products"],
   { revalidate: 60 }
@@ -468,13 +488,14 @@ const getCachedStorefrontProductsPaginated = unstable_cache(
     const safePage = Math.max(1, Number(page) || 1);
     const skip = (safePage - 1) * pageSize;
 
-    const [products, total] = await Promise.all([
+    const [products, total, bestSellerIds] = await Promise.all([
       findStorefrontProducts(categorySlug, voltage, search, maxPrice, minPrice, inStock, { skip, take: pageSize }),
-      countStorefrontProducts(categorySlug, voltage, search, maxPrice, minPrice, inStock)
+      countStorefrontProducts(categorySlug, voltage, search, maxPrice, minPrice, inStock),
+      getBestSellerProductIds()
     ]);
 
     return {
-      products: products.map(enrichProduct),
+      products: products.map((product) => enrichProduct(product, bestSellerIds)),
       total,
       page: safePage,
       pageSize,
@@ -505,13 +526,16 @@ export async function listStorefrontVoltageOptions(categorySlug, search) {
 // Memoized per-request: the product detail page calls this from both
 // generateMetadata() and the page body — cache() collapses those into one query.
 export const getStorefrontProductBySlug = cache(async (slug) => {
-  const product = await findProductBySlug(slug);
-  return product ? enrichProduct(product) : null;
+  const [product, bestSellerIds] = await Promise.all([findProductBySlug(slug), getBestSellerProductIds()]);
+  return product ? enrichProduct(product, bestSellerIds) : null;
 });
 
 export async function listRelatedProducts(productId, categoryId) {
-  const products = await findRelatedProducts(productId, categoryId);
-  return products.map(enrichProduct);
+  const [products, bestSellerIds] = await Promise.all([
+    findRelatedProducts(productId, categoryId),
+    getBestSellerProductIds()
+  ]);
+  return products.map((product) => enrichProduct(product, bestSellerIds));
 }
 
 export function scoreCompatibleProduct(baseProduct, candidateProduct) {
@@ -585,7 +609,10 @@ export async function getCompatibleProducts(productIdOrSlug, limit = 8) {
     return [];
   }
 
-  const candidates = await findCompatibleProductCandidates(product.id);
+  const [candidates, bestSellerIds] = await Promise.all([
+    findCompatibleProductCandidates(product.id),
+    getBestSellerProductIds()
+  ]);
 
   return candidates
     .map((candidate) => {
@@ -605,7 +632,7 @@ export async function getCompatibleProducts(productIdOrSlug, limit = 8) {
     )
     .slice(0, limit)
     .map((entry) => ({
-      ...enrichProduct(entry.product),
+      ...enrichProduct(entry.product, bestSellerIds),
       compatibilityScore: entry.score,
       compatibilityReasons: entry.reasons
     }));
@@ -616,21 +643,24 @@ export async function listProductSlugs() {
 }
 
 export async function getAlsoBoughtProducts(productId, limit = 6) {
-  const products = await findAlsoBoughtProducts(productId, limit);
+  const [products, bestSellerIds] = await Promise.all([
+    findAlsoBoughtProducts(productId, limit),
+    getBestSellerProductIds()
+  ]);
   return products.map((product) => ({
-    ...enrichProduct(product),
+    ...enrichProduct(product, bestSellerIds),
     coPurchaseCount: product.coPurchaseCount
   }));
 }
 
 export async function listFeaturedStorefrontProducts(limit = 8) {
-  const products = await findFeaturedProducts(limit);
-  return products.map(enrichProduct);
+  const [products, bestSellerIds] = await Promise.all([findFeaturedProducts(limit), getBestSellerProductIds()]);
+  return products.map((product) => enrichProduct(product, bestSellerIds));
 }
 
 export async function listNewArrivalsProducts(limit = 6) {
-  const products = await findNewArrivalsProducts(limit);
-  return products.map(enrichProduct);
+  const [products, bestSellerIds] = await Promise.all([findNewArrivalsProducts(limit), getBestSellerProductIds()]);
+  return products.map((product) => enrichProduct(product, bestSellerIds));
 }
 
 export async function getCheckoutSeedProducts(seedItems) {

@@ -253,6 +253,21 @@ export async function findProductsByIds(ids) {
   });
 }
 
+export async function findBestSellerProductIds(limit = 8, minUnitsSold = 3) {
+  const results = await prisma.orderItem.groupBy({
+    by: ["productId"],
+    where: {
+      productId: { not: null },
+      order: { status: "COMPLETED" }
+    },
+    _sum: { quantity: true },
+    orderBy: { _sum: { quantity: "desc" } },
+    take: limit
+  });
+
+  return results.filter((result) => (result._sum.quantity || 0) >= minUnitsSold).map((result) => result.productId);
+}
+
 export async function findAlsoBoughtProducts(productId, limit = 6) {
   const ordersContainingProduct = await prisma.orderItem.findMany({
     where: { productId },

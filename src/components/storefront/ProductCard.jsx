@@ -42,9 +42,11 @@ export default function ProductCard({ item }) {
           <span className="badge-pill badge-blue">
             {categoryName}
           </span>
-          <span className="badge-pill badge-orange">
-            {item.badge || "Featured"}
-          </span>
+          {item.badge ? (
+            <span className="badge-pill badge-orange">
+              {item.badge}
+            </span>
+          ) : null}
         </div>
         <Link href={detailHref} className="block min-w-0 font-display text-base font-semibold leading-snug text-slate-900 transition-colors hover:text-brand-blue" title={item.name}>
           <span className="line-clamp-2 break-words">

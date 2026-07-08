@@ -142,6 +142,12 @@ const COMPLETE_ROBOT_CAR_PATTERNS = [
   "ឡានរ៉ូបូតពេញលេញ"
 ];
 
+// Project types with a full, gap-aware structured build assembler in chatbot.service.js
+// (BUILD_GROUPS_BY_PROJECT_TYPE) — other project types fall back to plain search.
+const STRUCTURED_BUILD_PROJECT_TYPES = ["robot car", "line follower", "obstacle avoiding"];
+
+const BUILD_INTENT_VERBS = ["build", "make", "assemble", "create", "construct", "want", "need", "complete", "help me"];
+
 const KIT_ONLY_PATTERNS = [
   "show robot kits only",
   "robot kits only",
@@ -193,6 +199,18 @@ function detectCategory(input) {
 function detectProjectType(input) {
   const match = PROJECT_KEYWORDS.find(([keyword]) => input.includes(keyword));
   return match ? match[1] : null;
+}
+
+function detectCompleteBuildProjectType(input, projectType) {
+  if (includesAny(input, COMPLETE_ROBOT_CAR_PATTERNS)) {
+    return "robot car";
+  }
+
+  if (projectType && STRUCTURED_BUILD_PROJECT_TYPES.includes(projectType) && includesAny(input, BUILD_INTENT_VERBS)) {
+    return projectType;
+  }
+
+  return null;
 }
 
 function detectDifficulty(input) {
@@ -300,7 +318,7 @@ export function parseCatalogQuery(message = "") {
   const stock = detectStockFilter(input);
   const keywords = collectKeywords(input);
 
-  const wantsCompleteRobotCar = includesAny(input, COMPLETE_ROBOT_CAR_PATTERNS);
+  const completeBuildProjectType = detectCompleteBuildProjectType(input, projectType);
   const wantsKitsOnly = includesAny(input, KIT_ONLY_PATTERNS);
   const wantsProjectOptions = includesAny(input, PROJECT_OPTION_PATTERNS);
   const wantsCategories = /\bcategories\b|\bcategory\b/.test(input);
@@ -318,7 +336,7 @@ export function parseCatalogQuery(message = "") {
 
   if (wantsCount && (wantsProduct || wantsKit || wantsCategories || category || input.includes("store") || stock !== "any")) {
     intent = "catalog_aggregate";
-  } else if (wantsCompleteRobotCar) {
+  } else if (completeBuildProjectType) {
     intent = "complete_build";
   } else if (wantsCompare) {
     intent = "compare";
@@ -340,7 +358,7 @@ export function parseCatalogQuery(message = "") {
 
   if (wantsCategories) {
     entityType = "category";
-  } else if (wantsCompleteRobotCar) {
+  } else if (completeBuildProjectType) {
     entityType = "product";
   } else if (wantsKitsOnly) {
     entityType = "kit";
@@ -375,6 +393,7 @@ export function parseCatalogQuery(message = "") {
     intent,
     entityType,
     keywords,
+    completeBuildProjectType,
     filters: {
       maxPrice,
       price,

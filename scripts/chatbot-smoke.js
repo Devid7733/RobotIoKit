@@ -30,7 +30,9 @@ const cases = [
       hasStructuredItems(data.items) &&
       hasOnlyBuildableItems(data.items) &&
       hasCompactListingReply(data.reply, names) &&
-      hasAnyTerm(data.reply, ["line", "robot", "part", "project", "build"])
+      hasAnyTerm(data.reply, ["line", "robot", "part", "project", "build"]) &&
+      hasNoMissingGroupsWarning(data.reply) &&
+      data.buildSummary?.totalPrice > 0
   },
   {
     name: "line-following robot parts",
@@ -49,7 +51,9 @@ const cases = [
       names.some((name) => name.includes("HC-SR04")) &&
       names.some((name) => name.includes("Motor Driver")) &&
       hasCompactListingReply(data.reply, names) &&
-      hasAnyTerm(data.reply, ["obstacle", "robot", "part", "project", "build"])
+      hasAnyTerm(data.reply, ["obstacle", "robot", "part", "project", "build"]) &&
+      hasNoMissingGroupsWarning(data.reply) &&
+      data.buildSummary?.totalPrice > 0
   },
   {
     name: "robot car build",
@@ -59,7 +63,23 @@ const cases = [
       names.some((name) => /Arduino|ESP32/i.test(name)) &&
       names.some((name) => /Motor Driver/i.test(name)) &&
       names.some((name) => /Chassis/i.test(name)) &&
-      hasCompactListingReply(data.reply, names)
+      hasCompactListingReply(data.reply, names) &&
+      hasNoMissingGroupsWarning(data.reply) &&
+      data.buildSummary?.totalPrice > 0
+  },
+  {
+    name: "robot car build (rephrased trigger)",
+    message: "Build me a robot car",
+    expect: ({ data, names }) =>
+      data.items.length > 0 &&
+      names.some((name) => /Arduino|ESP32/i.test(name)) &&
+      names.some((name) => /Motor Driver/i.test(name)) &&
+      names.some((name) => /Chassis/i.test(name)) &&
+      hasStructuredItems(data.items) &&
+      hasOnlyBuildableItems(data.items) &&
+      hasCompactListingReply(data.reply, names) &&
+      hasNoMissingGroupsWarning(data.reply) &&
+      data.buildSummary?.totalPrice > 0
   },
   {
     name: "robot project builders",
@@ -451,6 +471,10 @@ function hasKhmerText(reply = "") {
   return /[ក-៿]/.test(String(reply || ""));
 }
 
+function hasNoMissingGroupsWarning(reply = "") {
+  return !/cannot find a suitable/i.test(String(reply || ""));
+}
+
 function hasCompactListingReply(reply = "", names = []) {
   const sentences = String(reply || "")
     .split(/[.!?។]+/)
@@ -504,7 +528,7 @@ function hasProjectCards(items = []) {
 // { ok, data: { reply, items, followUps, locationLink, language } } shape
 // the assertions below expect.
 function parseChatbotStream(body) {
-  const data = { reply: "", items: [], followUps: [], locationLink: "", language: "en" };
+  const data = { reply: "", items: [], followUps: [], locationLink: "", language: "en", buildSummary: null };
   let ok = true;
 
   for (const line of String(body || "").split("\n")) {
@@ -525,6 +549,7 @@ function parseChatbotStream(body) {
       data.followUps = event.followUps || [];
       data.locationLink = event.locationLink || "";
       data.language = event.language || "en";
+      data.buildSummary = event.buildSummary || null;
     } else if (event.type === "text") {
       data.reply += event.delta || "";
     } else if (event.type === "done") {
