@@ -4,6 +4,7 @@ import AddToCartButton from "@/components/storefront/AddToCartButton";
 import Icon from "@/components/common/Icon";
 import InStockFilter from "@/components/storefront/InStockFilter";
 import PriceRangeFilter from "@/components/storefront/PriceRangeFilter";
+import ProductSearchFilter from "@/components/storefront/ProductSearchFilter";
 import StorefrontShell from "@/components/storefront/StorefrontShell";
 import { listStorefrontCategories, listStorefrontProducts, listStorefrontProductsPaginated, listStorefrontVoltageOptions } from "@/services/productService";
 
@@ -82,18 +83,7 @@ export default async function ProductsPage({ searchParams }) {
 
             <div className="mt-8">
               <div className="text-sm font-semibold text-slate-900">Search</div>
-              <div className="relative mt-3">
-                <input
-                  type="text"
-                  value={search || ""}
-                  readOnly
-                  placeholder="Search products from the navbar..."
-                  className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm text-slate-700 outline-none"
-                />
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                  <Icon name="search" className="h-5 w-5" />
-                </span>
-              </div>
+              <ProductSearchFilter initialValue={search} />
             </div>
 
             <div className="mt-8">

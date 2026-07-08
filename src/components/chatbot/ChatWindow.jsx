@@ -410,7 +410,9 @@ export default function ChatWindow({ onClose }) {
   const [language, setLanguage] = useState("en");
   const [messages, setMessages] = useState([createWelcomeMessage("en")]);
   const [lastRecommendedItems, setLastRecommendedItems] = useState([]);
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const scrollRef = useRef(null);
+  const isNearBottomRef = useRef(true);
 
   const activeQuickPrompts = useMemo(() => quickPrompts[language] || quickPrompts.en, [language]);
 
@@ -445,11 +447,33 @@ export default function ChatWindow({ onClose }) {
   }, [messages, language, lastRecommendedItems]);
 
   useEffect(() => {
+    if (!isNearBottomRef.current) return;
     scrollRef.current?.scrollTo({
       top: scrollRef.current.scrollHeight,
-      behavior: "smooth"
+      behavior: isLoading ? "auto" : "smooth"
     });
   }, [messages, isLoading]);
+
+  const SCROLL_BOTTOM_THRESHOLD = 120;
+
+  function handleScroll() {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    const nearBottom = distanceFromBottom < SCROLL_BOTTOM_THRESHOLD;
+    isNearBottomRef.current = nearBottom;
+    setShowScrollButton(!nearBottom);
+  }
+
+  function scrollToBottom(behavior) {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    el.scrollTo({ top: el.scrollHeight, behavior });
+    isNearBottomRef.current = true;
+    setShowScrollButton(false);
+  }
 
   async function submitMessage(value) {
     const trimmedValue = String(value || "").trim();
@@ -467,6 +491,8 @@ export default function ChatWindow({ onClose }) {
       .slice(-6)
       .map((m) => ({ role: m.role === "bot" ? "assistant" : "user", content: m.content }));
 
+    isNearBottomRef.current = true;
+    setShowScrollButton(false);
     setMessages((prev) => [
       ...prev,
       { role: "user", content: trimmedValue },
@@ -627,7 +653,12 @@ export default function ChatWindow({ onClose }) {
         </button>
       </div>
 
-      <div ref={scrollRef} className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-slate-50 px-3.5 py-4 [scrollbar-width:none] sm:px-4 [&::-webkit-scrollbar]:hidden">
+      <div className="relative min-h-0 flex-1">
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="h-full space-y-4 overflow-y-auto bg-slate-50 px-3.5 py-4 [scrollbar-width:none] sm:px-4 [&::-webkit-scrollbar]:hidden"
+        >
         {messages.map((item, index) => {
           const isBot = item.role === "bot";
           const hasNoMatches = isBot && !item.items?.length && item.followUps?.length && index > 0;
@@ -673,6 +704,18 @@ export default function ChatWindow({ onClose }) {
         })}
 
         {isLoading && !messages.at(-1)?.content ? <TypingIndicator /> : null}
+      </div>
+
+      {showScrollButton ? (
+        <button
+          type="button"
+          onClick={() => scrollToBottom("smooth")}
+          className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-[0_12px_28px_rgba(15,23,42,0.15)] transition hover:border-brand-blue hover:text-brand-blue"
+        >
+          <Icon name="chevronDown" className="h-3.5 w-3.5" />
+          New messages
+        </button>
+      ) : null}
       </div>
 
       <div className="flex-none border-t border-slate-200 bg-white px-3.5 py-3.5 sm:px-4">
