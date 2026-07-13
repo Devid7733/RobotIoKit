@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useCart } from "@/components/storefront/CartProvider";
 import QuantityStepper from "@/components/storefront/QuantityStepper";
 
-export default function ProductPurchasePanel({ product }) {
+export default function RobotKitPurchasePanel({ kit }) {
   const { addItem } = useCart();
   const { status } = useSession();
   const router = useRouter();
@@ -15,15 +15,17 @@ export default function ProductPurchasePanel({ product }) {
   const [isBuying, setIsBuying] = useState(false);
   const [quantity, setQuantity] = useState(1);
 
+  const stockQuantity = Number(kit.stockQuantity || 0);
+
   const cartItem = {
-    id: product.id,
-    type: "product",
-    productId: product.id,
-    slug: product.slug,
-    name: product.name,
-    price: product.price,
-    image: product.image,
-    category: product.category
+    id: kit.id,
+    type: "robotKit",
+    robotKitId: kit.id,
+    slug: kit.slug,
+    name: kit.name,
+    price: kit.price,
+    image: kit.image,
+    category: "Robot Kits"
   };
 
   async function buyNow() {
@@ -52,16 +54,20 @@ export default function ProductPurchasePanel({ product }) {
     <div className="mt-8">
       <div className="text-sm font-semibold text-slate-700">Quantity:</div>
       <div className="mt-3 flex items-center gap-4">
-        <QuantityStepper quantity={quantity} onChange={setQuantity} max={product.stock} />
+        <QuantityStepper quantity={quantity} onChange={setQuantity} max={stockQuantity} />
       </div>
 
       <button
         type="button"
         onClick={buyNow}
-        disabled={isBuying}
+        disabled={isBuying || stockQuantity <= 0}
         className="button-primary mt-6 flex w-full items-center justify-center px-8 py-4 text-base disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {isBuying ? "Adding..." : `Add to Cart - $${(product.price * quantity).toFixed(2)}`}
+        {stockQuantity <= 0
+          ? "Out of Stock"
+          : isBuying
+            ? "Adding..."
+            : `Add to Cart - $${(kit.price * quantity).toFixed(2)}`}
       </button>
     </div>
   );

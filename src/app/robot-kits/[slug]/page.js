@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import AddToCartButton from "@/components/storefront/AddToCartButton";
+import RobotKitPurchasePanel from "@/components/storefront/RobotKitPurchasePanel";
 import StorefrontShell from "@/components/storefront/StorefrontShell";
 import { getStorefrontRobotKitBySlug, listStorefrontRobotKits } from "@/services/robotKitService";
 
@@ -69,16 +69,6 @@ export default async function RobotKitDetailPage({ params }) {
   }
 
   const stockQuantity = Number(kit.stockQuantity || 0);
-  const cartItem = {
-    id: kit.id,
-    type: "robotKit",
-    robotKitId: kit.id,
-    slug: kit.slug,
-    name: kit.name,
-    price: kit.price,
-    image: kit.image,
-    category: "Robot Kits"
-  };
 
   return (
     <StorefrontShell>
@@ -150,12 +140,9 @@ export default async function RobotKitDetailPage({ params }) {
               </span>
             </div>
 
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <AddToCartButton
-                item={cartItem}
-                className="button-primary px-8 py-3.5 text-sm"
-                disabled={stockQuantity <= 0}
-              />
+            <RobotKitPurchasePanel kit={kit} />
+
+            <div className="mt-4">
               <Link
                 href="/robot-kits"
                 className="rounded-[20px] border border-slate-200 bg-white px-6 py-3.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
