@@ -47,6 +47,7 @@ export const authOptions = {
           name: user.name,
           role: user.role,
           avatarUrl: user.avatarUrl || null,
+          image: user.image || null,
           guestSessionId: credentials.guestSessionId || null
         };
       }
@@ -69,7 +70,7 @@ export const authOptions = {
         token.role = user.role;
         token.email = user.email;
         token.name = user.name;
-        token.avatarUrl = user.avatarUrl || null;
+        token.avatarUrl = user.avatarUrl || user.image || null;
       }
 
       if (trigger === "update" && session?.avatarUrl !== undefined) {

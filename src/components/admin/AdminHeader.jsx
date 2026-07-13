@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import AdminHeaderBadges from "@/components/admin/AdminHeaderBadges";
-import { getInitials } from "@/lib/userDisplay";
+import Avatar from "@/components/common/Avatar";
 
 export default function AdminHeader({
   title = "Dashboard",
@@ -24,13 +24,7 @@ export default function AdminHeader({
         ) : null}
         <AdminHeaderBadges />
         <div className="flex items-center gap-3">
-          {session?.user?.avatarUrl ? (
-            <img src={session.user.avatarUrl} alt="" className="h-11 w-11 rounded-full object-cover" />
-          ) : (
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-blue text-base font-semibold text-white">
-              {getInitials(session?.user || {})}
-            </div>
-          )}
+          <Avatar user={session?.user || {}} className="h-11 w-11" />
           <div className="hidden sm:block">
             <div className="text-base font-semibold text-slate-900">{displayName}</div>
             <div className="text-sm text-slate-500">{session?.user?.email || ""}</div>

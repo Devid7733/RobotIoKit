@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import Icon from "@/components/common/Icon";
 import { useCart } from "@/components/storefront/CartProvider";
+import QuantityStepper from "@/components/storefront/QuantityStepper";
 
 function formatMoney(value) {
   return `$${value.toFixed(2)}`;
@@ -85,23 +86,12 @@ export default function CartPageClient() {
                     <div className="font-semibold text-slate-900">{item.name}</div>
                     <div className="mt-1 text-sm text-slate-500">{item.category}</div>
                     <div className="mt-3 flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleQuantityChange(item, item.qty - 1)}
-                        disabled={item.qty <= 1 || pendingAction === `${item.cartItemId}:qty`}
-                        className="rounded-xl border border-slate-200 px-3 py-1 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        -
-                      </button>
-                      <span className="min-w-8 text-center text-sm font-semibold">{item.qty}</span>
-                      <button
-                        type="button"
-                        onClick={() => handleQuantityChange(item, item.qty + 1)}
+                      <QuantityStepper
+                        quantity={item.qty}
+                        onChange={(next) => handleQuantityChange(item, next)}
+                        min={1}
                         disabled={pendingAction === `${item.cartItemId}:qty`}
-                        className="rounded-xl border border-slate-200 px-3 py-1 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        +
-                      </button>
+                      />
                     </div>
                   </div>
                 </div>
