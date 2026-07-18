@@ -1465,6 +1465,39 @@ Next recommended task:
 
 ---
 
+### Registration Form Copy Cleanup
+
+Status: Completed
+
+Reason:
+
+* The registration form mentioned optional profile fields that are not part of signup, which added unnecessary cognitive load.
+
+Changed files:
+
+* `src/components/storefront/AuthForm.jsx`
+* `docs/refactor-status.md`
+
+Short audit:
+
+* Removed only the optional phone, province, city, and address message from registration.
+* Password guidance, validation, email-verification redirect, login form, and Forgot password link remain unchanged.
+
+Verification:
+
+* `npm run build` passed.
+* `node --check src/components/storefront/AuthForm.jsx` is not applicable because Node does not support syntax-checking `.jsx` files directly; the successful Next.js build compiled the component.
+
+Risks / manual checks:
+
+* Confirm `/register` shows only the password rule beneath the password field and `/login` continues to show Forgot password.
+
+Next recommended task:
+
+* Continue the current highest-priority manual chatbot shopping-filter UI verification.
+
+---
+
 This file tracks the current state of the project.
 
 Historical completed tasks should be moved to:

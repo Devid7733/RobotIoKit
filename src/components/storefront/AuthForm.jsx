@@ -150,14 +150,9 @@ export default function AuthForm({ mode, callbackUrl = "" }) {
             </div>
 
             {isRegister ? (
-              <>
-                <p className="text-xs leading-5 text-slate-400">
-                  Password must be at least 8 characters and include one uppercase letter and one number.
-                </p>
-                <p className="text-sm leading-6 text-slate-500">
-                  Phone, province, city, and address can be added from your account after email verification.
-                </p>
-              </>
+              <p className="text-xs leading-5 text-slate-400">
+                Password must be at least 8 characters and include one uppercase letter and one number.
+              </p>
             ) : (
               <div className="text-right text-sm">
                 <Link href="/forgot-password" className="font-medium text-brand-blue">
