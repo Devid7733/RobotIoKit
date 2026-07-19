@@ -310,6 +310,7 @@ function mapProductRecord(product) {
 }
 
 function toProductWriteData(input) {
+  const description = typeof input.description === "string" ? input.description : "";
   const hasVoltages = Object.prototype.hasOwnProperty.call(input, "voltages");
   const hasVoltage = Object.prototype.hasOwnProperty.call(input, "voltage");
   const voltages = hasVoltages
@@ -321,7 +322,7 @@ function toProductWriteData(input) {
   return {
     name: input.name,
     slug: input.slug || slugify(input.name),
-    description: input.description,
+    description: description.trim() ? description : "",
     sku: input.sku || null,
     price: Number(input.price),
     stock: Number(input.stock ?? 0),

@@ -603,7 +603,6 @@ export default function AdminProductManager({ categories }) {
                   value={form.description}
                   onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
                   className="input-base min-h-28"
-                  required
                 />
               </label>
 

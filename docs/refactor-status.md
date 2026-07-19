@@ -1498,6 +1498,39 @@ Next recommended task:
 
 ---
 
+### Optional Product Descriptions
+
+Status: Completed
+
+Reason:
+
+* Admins need to create products before description content is available.
+
+Changed files:
+
+* `src/components/admin/AdminProductManager.jsx`
+* `src/services/productService.js`
+* `docs/refactor-status.md`
+
+Short audit:
+
+* The admin product form no longer requires a description.
+* Product writes normalize missing, null, and whitespace-only descriptions to an empty string, preserving the non-null Prisma field and existing storefront response shape.
+
+Verification:
+
+* `npm run build` passed.
+
+Risks / manual checks:
+
+* Create and edit a product with a blank description; confirm it saves and renders without errors.
+
+Next recommended task:
+
+* Continue the current highest-priority manual chatbot shopping-filter UI verification.
+
+---
+
 This file tracks the current state of the project.
 
 Historical completed tasks should be moved to:
