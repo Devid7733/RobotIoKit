@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import Icon from "@/components/common/Icon";
+import MediaPicker from "@/components/admin/MediaPicker";
 
 const emptyStoreForm = {
   storeName: "",
@@ -13,13 +14,10 @@ const emptyStoreForm = {
   logoUrl: ""
 };
 
-const emptyPaymentForm = {
-  khqrConfigured: false,
-  merchantName: "",
-  bakongId: "",
-  accountName: "",
-  currency: "",
-  khqrImageUrl: ""
+const emptyPasswordForm = {
+  currentPassword: "",
+  newPassword: "",
+  confirmPassword: ""
 };
 
 function isValidEmail(value) {
@@ -38,14 +36,6 @@ async function readJson(response, fallbackMessage) {
   }
 
   return payload.data;
-}
-
-function StatusBadge({ configured }) {
-  return (
-    <span className={`badge-soft ${configured ? "badge-emerald" : "badge-rose"}`}>
-      {configured ? "Configured" : "Missing"}
-    </span>
-  );
 }
 
 function SectionCard({ icon, title, description, children, footer }) {
@@ -98,7 +88,7 @@ function SaveButton({ loading, children }) {
 
 export default function AdminSettingsClient() {
   const [storeForm, setStoreForm] = useState(emptyStoreForm);
-  const [paymentForm, setPaymentForm] = useState(emptyPaymentForm);
+  const [passwordForm, setPasswordForm] = useState(emptyPasswordForm);
   const [loading, setLoading] = useState(true);
   const [savingSection, setSavingSection] = useState("");
 
@@ -115,7 +105,6 @@ export default function AdminSettingsClient() {
         }
 
         setStoreForm({ ...emptyStoreForm, ...(data?.store || {}) });
-        setPaymentForm({ ...emptyPaymentForm, ...(data?.payment || {}) });
       } catch (loadError) {
         if (active) {
           toast.error(loadError instanceof Error ? loadError.message : "Unable to load settings.");
@@ -138,8 +127,8 @@ export default function AdminSettingsClient() {
     setStoreForm((current) => ({ ...current, [field]: value }));
   }
 
-  function setPaymentValue(field, value) {
-    setPaymentForm((current) => ({ ...current, [field]: value }));
+  function setPasswordValue(field, value) {
+    setPasswordForm((current) => ({ ...current, [field]: value }));
   }
 
   async function saveSection(section, endpoint, payload, onSuccess) {
@@ -174,10 +163,25 @@ export default function AdminSettingsClient() {
     saveSection("store", "/api/admin/settings/store", storeForm, (data) => setStoreForm({ ...emptyStoreForm, ...data }));
   }
 
-  function savePayment(event) {
+  function savePassword(event) {
     event.preventDefault();
 
-    saveSection("payment", "/api/admin/settings/payment", paymentForm, (data) => setPaymentForm({ ...emptyPaymentForm, ...data }));
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast.error("New password and confirmation do not match.");
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 8) {
+      toast.error("New password must be at least 8 characters.");
+      return;
+    }
+
+    saveSection(
+      "password",
+      "/api/admin/settings/password",
+      { currentPassword: passwordForm.currentPassword, newPassword: passwordForm.newPassword },
+      () => setPasswordForm(emptyPasswordForm)
+    );
   }
 
   return (
@@ -185,7 +189,7 @@ export default function AdminSettingsClient() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="admin-kicker">Admin setup</p>
-          <p className="admin-description max-w-3xl">Manage public store details and payment display settings.</p>
+          <p className="admin-description max-w-3xl">Manage public store details and your admin account.</p>
         </div>
         {loading ? <span className="badge-soft badge-blue">Loading</span> : null}
       </div>
@@ -197,7 +201,7 @@ export default function AdminSettingsClient() {
           description="Public-facing contact details used across store operations and customer support."
           footer={<SaveButton loading={savingSection === "store"}>Save Store</SaveButton>}
         >
-          <div className="grid gap-5 lg:grid-cols-[1fr,220px]">
+          <div className="grid gap-5 lg:grid-cols-[1fr,280px]">
             <div className="grid gap-5 md:grid-cols-2">
               <FormField label="Store name">
                 <input
@@ -242,71 +246,48 @@ export default function AdminSettingsClient() {
                 ) : null}
               </FormField>
             </div>
-            <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4">
-              <div className="flex aspect-square items-center justify-center rounded-lg bg-white text-slate-400">
-                {storeForm.logoUrl ? (
-                  <img src={storeForm.logoUrl} alt="Store logo preview" className="max-h-full max-w-full rounded-lg object-contain" />
-                ) : (
-                  <Icon name="store" className="h-10 w-10" />
-                )}
-              </div>
-              <FormField label="Logo upload placeholder" hint="Upload wiring can reuse the media API in a later task.">
-                <input
-                  className={textInputClass()}
-                  value={storeForm.logoUrl}
-                  onChange={(event) => setStoreValue("logoUrl", event.target.value)}
-                  placeholder="/uploads/logo.png"
-                />
-              </FormField>
-            </div>
+            <MediaPicker label="Store logo" value={storeForm.logoUrl} onChange={(url) => setStoreValue("logoUrl", url)} />
           </div>
         </SectionCard>
       </form>
 
-      <form onSubmit={savePayment}>
+      <form onSubmit={savePassword}>
         <SectionCard
-          icon="creditCard"
-          title="Payment Settings"
-          description="KHQR display values for dynamic Bakong payment generation. Secret payment credentials stay in environment variables."
-          footer={<StatusBadge configured={Boolean(paymentForm.khqrConfigured)} />}
+          icon="lock"
+          title="Change Password"
+          description="Update the password used to sign in to this admin account."
+          footer={<SaveButton loading={savingSection === "password"}>Save Password</SaveButton>}
         >
-          <div className="grid gap-5 md:grid-cols-2">
-            <FormField label="Merchant name">
+          <div className="grid gap-5 md:grid-cols-3">
+            <FormField label="Current password">
               <input
+                type="password"
                 className={textInputClass()}
-                value={paymentForm.merchantName}
-                onChange={(event) => setPaymentValue("merchantName", event.target.value)}
-                placeholder="RobotIoKit"
+                value={passwordForm.currentPassword}
+                onChange={(event) => setPasswordValue("currentPassword", event.target.value)}
+                autoComplete="current-password"
               />
             </FormField>
-            <FormField label="Bakong ID">
+            <FormField label="New password" hint="At least 8 characters, 1 uppercase letter, 1 number.">
               <input
+                type="password"
                 className={textInputClass()}
-                value={paymentForm.bakongId}
-                onChange={(event) => setPaymentValue("bakongId", event.target.value)}
-                placeholder="merchant@bank"
+                value={passwordForm.newPassword}
+                onChange={(event) => setPasswordValue("newPassword", event.target.value)}
+                autoComplete="new-password"
               />
             </FormField>
-            <FormField label="Account name">
+            <FormField label="Confirm new password">
               <input
-                className={textInputClass()}
-                value={paymentForm.accountName}
-                onChange={(event) => setPaymentValue("accountName", event.target.value)}
-                placeholder="RobotIoKit"
+                type="password"
+                className={textInputClass(
+                  Boolean(passwordForm.confirmPassword) && passwordForm.confirmPassword !== passwordForm.newPassword
+                )}
+                value={passwordForm.confirmPassword}
+                onChange={(event) => setPasswordValue("confirmPassword", event.target.value)}
+                autoComplete="new-password"
               />
             </FormField>
-            <FormField label="Currency">
-              <input
-                className={textInputClass()}
-                value={paymentForm.currency}
-                onChange={(event) => setPaymentValue("currency", event.target.value.toUpperCase())}
-                maxLength={3}
-                placeholder="USD"
-              />
-            </FormField>
-            <div className="md:col-span-2 flex justify-end">
-              <SaveButton loading={savingSection === "payment"}>Save Payment</SaveButton>
-            </div>
           </div>
         </SectionCard>
       </form>

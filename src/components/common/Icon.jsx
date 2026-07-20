@@ -309,6 +309,16 @@ export default function Icon({ name, className = "h-5 w-5" }) {
         strokeLinejoin="round"
         strokeWidth="1.8"
       />
+    ),
+    lock: (
+      <path
+        d="M6 11V8a6 6 0 1112 0v3m-13 0h14v9a1 1 0 01-1 1H6a1 1 0 01-1-1v-9zm7 5v2"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
     )
   };
 

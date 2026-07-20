@@ -60,7 +60,7 @@ function validateEmail(email) {
   }
 }
 
-function validatePassword(password) {
+export function validatePassword(password) {
   const pw = String(password || "");
   if (pw.length < 8) {
     throw new Error("Password must be at least 8 characters.");

@@ -9,8 +9,10 @@ import {
   upsertAdminSettings,
   upsertGlobalAdminNotificationRead
 } from "@/modules/admin/admin.repository";
-import { STATIC_KHQR_IMAGE_PATH } from "@/lib/khqr";
 import { getStoreLocationLink } from "@/services/storeSupportService";
+import { hashPassword, verifyPassword } from "@/lib/password";
+import { validatePassword } from "@/modules/auth/auth.service";
+import { findUserById, updateUserPassword } from "@/modules/auth/auth.repository";
 
 const SETTINGS_GROUPS = [
   {
@@ -83,23 +85,6 @@ function formatEmailSettings(settings) {
     smtpHost: settings?.smtpHost || "smtp.gmail.com",
     smtpPort: settings?.smtpPort || 587,
     senderEmail: settings?.senderEmail || getEnvValue("EMAIL_FROM") || ""
-  };
-}
-
-function formatPaymentSettings(settings) {
-  return {
-    khqrConfigured:
-      !isMissingEnvValue("KHQR_MERCHANT_NAME") &&
-      !isMissingEnvValue("KHQR_ACCOUNT_ID") &&
-      !isMissingEnvValue("KHQR_BANK_NAME") &&
-      !isMissingEnvValue("KHQR_CITY") &&
-      !isMissingEnvValue("KHQR_CURRENCY") &&
-      !isMissingEnvValue("BAKONG_API_TOKEN"),
-    merchantName: settings?.merchantName || getEnvValue("KHQR_MERCHANT_NAME") || "",
-    bakongId: settings?.bakongId || getEnvValue("KHQR_ACCOUNT_ID") || "",
-    accountName: settings?.accountName || getEnvValue("KHQR_MERCHANT_NAME") || "",
-    currency: settings?.currency || getEnvValue("KHQR_CURRENCY") || "USD",
-    khqrImageUrl: settings?.khqrImageUrl || STATIC_KHQR_IMAGE_PATH
   };
 }
 
@@ -221,8 +206,7 @@ export async function getAdminSettingsStatus() {
     missing,
     groups,
     store: formatStoreSettings(settings),
-    email: formatEmailSettings(settings),
-    payment: formatPaymentSettings(settings)
+    email: formatEmailSettings(settings)
   };
 }
 
@@ -275,24 +259,23 @@ export async function updateAdminEmailSettings(body) {
   return formatEmailSettings(settings);
 }
 
-export async function getAdminPaymentSettings() {
-  const settings = await findAdminSettings();
-  return formatPaymentSettings(settings);
-}
+export async function changeAdminPassword(userId, body = {}) {
+  const currentPassword = String(body.currentPassword || "");
+  const newPassword = String(body.newPassword || "");
 
-export async function updateAdminPaymentSettings(body) {
-  const currency = cleanText(body.currency);
+  const user = await findUserById(userId);
 
-  if (currency && !/^[A-Za-z]{3}$/.test(currency)) {
-    throw createServiceError("Currency must use a 3-letter code.", 400);
+  if (!user || !verifyPassword(currentPassword, user.password)) {
+    throw createServiceError("Current password is incorrect.", 400);
   }
 
-  const settings = await upsertAdminSettings({
-    merchantName: cleanText(body.merchantName),
-    bakongId: cleanText(body.bakongId),
-    accountName: cleanText(body.accountName),
-    currency: currency ? currency.toUpperCase() : null,
-    khqrImageUrl: cleanText(body.khqrImageUrl)
-  });
-  return formatPaymentSettings(settings);
+  try {
+    validatePassword(newPassword);
+  } catch (error) {
+    throw createServiceError(error.message, 400);
+  }
+
+  await updateUserPassword(userId, hashPassword(newPassword));
+
+  return { message: "Password updated." };
 }

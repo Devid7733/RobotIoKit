@@ -6,6 +6,12 @@ export function findUserByEmail(email) {
   });
 }
 
+export function findUserById(userId) {
+  return prisma.user.findUnique({
+    where: { id: userId }
+  });
+}
+
 export function createUser(data) {
   return prisma.user.create({ data });
 }
